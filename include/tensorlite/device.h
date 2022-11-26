@@ -60,6 +60,12 @@ public:
     return *this;
   }
 
+  bool operator==(const Device &other) const {
+    return other.id_ == id_ && other.type_ == type_;
+  }
+
+  bool operator!=(const Device &other) const { return !(*this == other); }
+
   ~Device() {}
 
   /**
@@ -71,6 +77,20 @@ public:
     std::string type_name(DeviceTypeName(type_));
     return type_name + "_" + std::to_string(id_);
   }
+
+  /**
+   * \brief Get the id of this device
+   *
+   * \return int
+   */
+  int GetId() const { return id_; }
+
+  /**
+   * \brief Get the device type of this device
+   *
+   * \return DeviceType
+   */
+  DeviceType GetType() const { return type_; }
 
   friend std::ostream &operator<<(std::ostream &os, const Device &device) {
     os << device.Name();
