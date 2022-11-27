@@ -1,8 +1,8 @@
 #ifndef TENSORLITE_ALLOCATOR_ALLOCATOR_H_
 #define TENSORLITE_ALLOCATOR_ALLOCATOR_H_
 
-#include "tensorlite/device.h"
 #include "tensorlite/buffer.h"
+#include "tensorlite/device.h"
 namespace tl {
 
 /**
@@ -48,7 +48,8 @@ template <typename DerivedTy> struct MemoryAllocator {
  * alignment.
  */
 template <DeviceType Device>
-inline std::shared_ptr<Buffer> NewBuffer(int device_id, size_t size, size_t align);
+inline std::shared_ptr<Buffer> NewBuffer(int device_id, size_t size,
+                                         size_t align);
 
 } // namespace tl
 

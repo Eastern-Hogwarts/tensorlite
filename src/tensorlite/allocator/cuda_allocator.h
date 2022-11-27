@@ -54,8 +54,8 @@ void CudaBufferDeleter(Buffer *buffer);
 std::shared_ptr<Buffer> NewCudaBuffer(int device_id, size_t size, size_t align);
 
 template <>
-inline std::shared_ptr<Buffer> NewBuffer<DeviceType::kCUDA>(int device_id, size_t size,
-                                                     size_t align) {
+inline std::shared_ptr<Buffer>
+NewBuffer<DeviceType::kCUDA>(int device_id, size_t size, size_t align) {
   return NewCudaBuffer(device_id, size, align);
 }
 

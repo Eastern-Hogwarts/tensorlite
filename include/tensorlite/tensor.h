@@ -558,6 +558,40 @@ public:
                                      size_t alignment = 0,
                                      Device device = Device::DefaultDevice());
 
+  TENSORLITE_DLL static Tensor Ones(TensorShape shape, DataType dtype,
+                                    Device device = Device::DefaultDevice());
+
+  TENSORLITE_DLL static Tensor Zeros(TensorShape shape, DataType dtype,
+                                    Device device = Device::DefaultDevice());
+
+  // Contiguous
+
+  // Copy
+
+  // Transpose
+
+  // Transfer
+
+  // View
+
+  // Cast
+
+  // Reshape
+
+  // Fill
+
+  // Uniform
+
+  // Normal
+
+  // SameAs
+
+  // Full
+
+  // Fill
+
+  // FillInBytes
+
 private:
   //
   DataType dtype_;

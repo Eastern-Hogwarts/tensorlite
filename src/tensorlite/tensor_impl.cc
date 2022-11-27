@@ -32,7 +32,8 @@ Tensor Tensor::Empty(TensorShape shape, DataType dtype, size_t alignment,
     buffer_ptr = NewBuffer<device_v>(device.GetId(), buffer_size, alignment);
   });
 
-  return Tensor(buffer_ptr, TensorShapeWithStride::GetContiguousShape(shape), dtype);
+  return Tensor(buffer_ptr, TensorShapeWithStride::GetContiguousShape(shape),
+                dtype);
 }
 
 } // namespace tl

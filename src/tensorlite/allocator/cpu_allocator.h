@@ -54,8 +54,8 @@ void CpuBufferDeleter(Buffer *buffer);
 std::shared_ptr<Buffer> NewCpuBuffer(int device_id, size_t size, size_t align);
 
 template <>
-inline std::shared_ptr<Buffer> NewBuffer<DeviceType::kCPU>(int device_id, size_t size,
-                                                    size_t align) {
+inline std::shared_ptr<Buffer>
+NewBuffer<DeviceType::kCPU>(int device_id, size_t size, size_t align) {
   return NewCpuBuffer(device_id, size, align);
 }
 
