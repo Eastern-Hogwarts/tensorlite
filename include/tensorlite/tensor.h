@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "tensorlite/buffer.h"
+#include "tensorlite/device.h"
 #include "tensorlite/dtype.h"
 #include "tensorlite/macros.h"
 
@@ -26,11 +27,6 @@ public:
   static constexpr size_t kMaxTensorRank = 16;
 
   /**
-   * \brief Construct a new Tensor Shape object
-   */
-  TensorShape() {}
-
-  /**
    * \brief Construct a new Tensor Shape object from vector
    *
    * \tparam IndexTy Data type of the given vector object
@@ -38,13 +34,15 @@ public:
    */
   template <typename IndexTy,
             std::enable_if_t<std::is_integral_v<IndexTy>> * = nullptr>
-  explicit TensorShape(const std::vector<IndexTy> &shape) {
+  TensorShape(const std::vector<IndexTy> &shape) {
     assert(shape.size() <= kMaxTensorRank);
     for (auto i = 0; i < shape.size(); ++i) {
       shape_[i] = static_cast<int64_t>(shape[i]);
     }
     rank_ = shape.size();
   }
+
+  TensorShape() = default;
 
   TensorShape(const TensorShape &) = default;
 
@@ -53,6 +51,8 @@ public:
   TensorShape &operator=(const TensorShape &) = default;
 
   TensorShape &operator=(TensorShape &&) = default;
+
+  ~TensorShape() = default;
 
   /**
    * \brief Dump the shape into a vector of given data type.
@@ -199,8 +199,6 @@ protected:
  */
 class TensorShapeWithStride : public TensorShape {
 public:
-  TensorShapeWithStride() {}
-
   template <typename IndexTy,
             std::enable_if_t<std::is_integral_v<IndexTy>> * = nullptr>
   explicit TensorShapeWithStride(const std::vector<IndexTy> &shape,
@@ -212,6 +210,8 @@ public:
     }
   }
 
+  TensorShapeWithStride() = default;
+
   TensorShapeWithStride(const TensorShapeWithStride &) = default;
 
   TensorShapeWithStride(TensorShapeWithStride &&) = default;
@@ -219,6 +219,8 @@ public:
   TensorShapeWithStride &operator=(const TensorShapeWithStride &) = default;
 
   TensorShapeWithStride &operator=(TensorShapeWithStride &&) = default;
+
+  ~TensorShapeWithStride() = default;
 
   /**
    * \brief Return i-th stride of this shape object
@@ -346,7 +348,7 @@ public:
    * \param shape The input shape
    * \return TensorShapeWithStride
    */
-  static TensorShapeWithStride GetContiguousShape(const TensorShape& shape) {
+  static TensorShapeWithStride GetContiguousShape(const TensorShape &shape) {
     auto vec_shape = shape.ToVector();
     return TensorShapeWithStride(vec_shape, GetContiguousStride(vec_shape));
   }
@@ -360,48 +362,201 @@ protected:
  *
  */
 class Tensor {
+  using BufferPtr = std::shared_ptr<Buffer>;
+
 public:
-  /**
-   * \brief Construct a new Tensor object
-   *
-   */
-  Tensor();
+  Tensor() = delete;
 
   /**
-   * \brief Construct a new Tensor object
+   * \brief Construct a new Tensor object. DO NOT use this directly.
    *
-   * \param other
+   * \param buffer The underlying data buffer
+   * \param shape The shape of this tensor
+   * \param dtype The data type of this tensor
    */
-  Tensor(const Tensor &other);
+  explicit Tensor(BufferPtr buffer, const TensorShapeWithStride &shape,
+                  DataType dtype)
+      : buffer_(buffer), shape_(shape), dtype_(dtype) {}
+
+  Tensor(const Tensor &other) = default;
+
+  Tensor(Tensor &&other) = default;
+
+  Tensor &operator=(const Tensor &other) {
+    auto tmp(other);
+    swap(tmp, *this);
+    return *this;
+  }
+
+  Tensor &operator=(Tensor &&other) {
+    auto tmp(std::move(other));
+    swap(tmp, *this);
+    return *this;
+  }
+
+  ~Tensor() = default;
 
   /**
-   * \brief Construct a new Tensor object
-   *
-   * \param other
+   * \brief Swap two tensors
    */
-  Tensor(Tensor &&other);
+  friend void swap(Tensor &t1, Tensor &t2) {
+    using std::swap; // enable ADL
+    swap(t1.buffer_, t2.buffer_);
+    swap(t1.shape_, t2.shape_);
+    swap(t1.dtype_, t2.dtype_);
+  }
 
   /**
-   * \brief
+   * \brief Get the device object of this tensor
    *
-   * \param other
-   * \return Tensor&
+   * \return Device
    */
-  Tensor &operator=(const Tensor &other);
+  Device GetDevice() const { return buffer_->GetDevice(); }
 
   /**
-   * \brief
+   * \brief Get the data type of this tensor
    *
-   * \param other
-   * \return Tensor&
+   * \return DataType
    */
-  Tensor &operator=(Tensor &&other);
+  DataType GetDataType() const { return dtype_; }
 
   /**
-   * \brief Destroy the Tensor object
-   *
+   * \brief Check whether this tensor is contiguous
    */
-  ~Tensor();
+  bool IsContiguous() const { return shape_.IsContiguous(); }
+
+  /**
+   * \brief Check whether this tensor is a scalar
+   */
+  bool IsScalar() const { return shape_.IsScalar(); }
+
+  /**
+   * \brief Get the alignment of this tensor
+   *
+   * \return size_t
+   */
+  size_t GetAlignment() const { return buffer_->GetAlignment(); }
+
+  /**
+   * \brief Get the size of underlying buffer in bytes
+   *
+   * \return size_t
+   *
+   * \note this may be larger than the tensor's size (to meet the align
+   * requirement)
+   */
+  size_t GetBufferSize() const { return buffer_->GetSize(); }
+
+  /**
+   * \brief Get the logically size of this tensor
+   *
+   * \return int64_t
+   */
+  int64_t TensorSize() const { return GetNumElems() * dtype_.Size(); }
+
+  /**
+   * \brief Get the number of elements in this tensor
+   *
+   * \return size_t
+   */
+  int64_t GetNumElems() const { return shape_.NumElem(); }
+
+  /**
+   * \brief Return a pointer with specific type pointing to the underlying
+   * buffer
+   *
+   * \tparam DataTy The data type of the return pointer.
+   * \return DataTy*
+   */
+  template <typename DataTy> DataTy *TypedPtr() {
+    return buffer_->TypedPtr<DataTy>();
+  }
+
+  /**
+   * \brief Return a pointer with specific type pointing to the underlying
+   * buffer
+   *
+   * \tparam DataTy The data type of the return pointer.
+   * \return const DataTy*
+   */
+  template <typename DataTy> const DataTy *TypedPtr() const {
+    return buffer_->TypedPtr<DataTy>();
+  }
+
+  /**
+   * \brief Return a pointer pointing to the underlying buffer
+   *
+   * \return void*
+   */
+  void *RawPtr() { return buffer_->UntypedData(); }
+
+  /**
+   * \brief Return a pointer pointing to the underlying buffer
+   *
+   * \return const void*
+   */
+  const void *RawPtr() const { return buffer_->UntypedData(); }
+
+  /**
+   * \brief Get tensor shape
+   *
+   * \return TensorShape&
+   */
+  TensorShape &GetShape() { return shape_; }
+
+  /**
+   * \brief Get tensor shape
+   *
+   * \return const TensorShape&
+   */
+  const TensorShape &GetShape() const { return shape_; }
+
+  /**
+   * \brief Get tensor shape with strides
+   *
+   * \return TensorShapeWithStride&
+   */
+  TensorShapeWithStride &GetShapeWithStride() { return shape_; }
+
+  /**
+   * \brief Get tensor shape with strides
+   *
+   * \return const TensorShapeWithStride&
+   */
+  const TensorShapeWithStride &GetShapeWithStride() const { return shape_; }
+
+  /**
+   * \brief Create an empty tensor with given shape, dtype, alignment and
+   * device. If alignment == 0, use the size of data type as its alignment
+   *
+   * \tparam IndexTy Index type of shape vector.
+   * \param shape Shape of this tensor
+   * \param dtype Data type of this tensor
+   * \param alignment Alignment requirement of this tensor
+   * \param device Device that this tensor resides in.
+   * \return Tensor
+   */
+  template <typename IndexTy = int64_t,
+            std::enable_if_t<std::is_integral_v<IndexTy>> * = nullptr>
+  static Tensor Empty(const std::vector<IndexTy> &shape, DataType dtype,
+                      size_t alignment = 0,
+                      Device device = Device::DefaultDevice()) {
+    return Tensor::Empty(TensorShape(shape), dtype, alignment, device);
+  }
+
+  /**
+   * \brief Create an empty tensor with given shape, dtype, alignment and
+   * device. If alignment == 0, use the size of data type as its alignment
+   *
+   * \param shape Shape of this tensor
+   * \param dtype Data type of this tensor
+   * \param alignment Alignment requirement of this tensor
+   * \param device Device that this tensor resides in.
+   * \return Tensor
+   */
+  TENSORLITE_DLL static Tensor Empty(TensorShape shape, DataType dtype,
+                                     size_t alignment = 0,
+                                     Device device = Device::DefaultDevice());
 
 private:
   //
@@ -411,7 +566,7 @@ private:
   TensorShapeWithStride shape_;
 
   //
-  std::shared_ptr<Buffer> buffer_;
+  BufferPtr buffer_;
 };
 
 } // namespace tl

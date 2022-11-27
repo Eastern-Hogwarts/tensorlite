@@ -113,6 +113,13 @@ public:
    */
   static Device CpuDevice(int id = 0) { return Device(id, DeviceType::kCPU); }
 
+  /**
+   * \brief Get the default device (CPU:0)
+   *
+   * \return Device
+   */
+  static Device DefaultDevice() { return CpuDevice(); }
+
 private:
   int id_;
   DeviceType type_;

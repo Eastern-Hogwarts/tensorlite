@@ -47,8 +47,17 @@ void CpuBufferDeleter(Buffer *buffer);
  * \param align alignment requirement of this buffer
  * \return std::shared_ptr<Buffer> A shared pointer pointing to the buffer
  * object
+ *
+ * \note The actual size allocated may be larger then the given size to meet the
+ * alignment.
  */
 std::shared_ptr<Buffer> NewCpuBuffer(int device_id, size_t size, size_t align);
+
+template <>
+inline std::shared_ptr<Buffer> NewBuffer<DeviceType::kCPU>(int device_id, size_t size,
+                                                    size_t align) {
+  return NewCpuBuffer(device_id, size, align);
+}
 
 } // namespace tl
 

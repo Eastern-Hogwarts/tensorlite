@@ -22,6 +22,7 @@ void CudaMemoryAllocator::Free(int device_id, void *ptr, size_t align) {
 
 std::shared_ptr<Buffer> NewCudaBuffer(int device_id, size_t size,
                                       size_t align) {
+  size = utils::ceil_align(size, align);
   void *ptr = CudaMemoryAllocator::Allocate(device_id, size, align);
   if (ptr) {
     return std::make_shared<Buffer>(ptr, size, align,
