@@ -1,0 +1,40 @@
+/*!
+ * \file half.h
+ * \brief A CPU implementation of IEEE-754 Half-Precision Floating-Point
+ */
+#ifndef TENSORLITE_FP16_H_
+#define TENSORLITE_FP16_H_
+
+#include <fp16.h>
+
+namespace tl {
+
+struct Float16 {
+  uint16_t bits;
+
+  Half() = default;
+  Half(float f)
+    : bits(fp16_ieee_from_fp32_value(f)) {}
+  operator float() const { return fp16_ieee_to_fp32_value(bits); }
+
+#define DEFINE_BINARY_OP(op) \
+  Half operator op(Half other) const { \
+    return static_cast<float>(*this) op static_cast<float>(other); \
+  }
+
+  DEFINE_BINARY_OP(+)
+  DEFINE_BINARY_OP(-)
+  DEFINE_BINARY_OP(*)
+  DEFINE_BINARY_OP(/)
+
+  static Half FromHex(uint16_t b) {
+    Half h;
+    h.bits = b;
+    return h;
+  }
+};
+
+using fp16_t = Float16;
+
+} // namespace tl
+#endif  // TENSORLITE_FP16_H_

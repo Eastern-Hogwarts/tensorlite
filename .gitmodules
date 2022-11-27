@@ -1,0 +1,3 @@
+[submodule "3rdparty/FP16"]
+	path = 3rdparty/FP16
+	url = https://github.com/Maratyszcza/FP16
