@@ -38,6 +38,7 @@ set_target_properties(tensorlite PROPERTIES POSITION_INDEPENDENT_CODE ON)
 set_target_properties(tensorlite PROPERTIES CUDA_ARCHITECTURES "${CMAKE_CUDA_ARCHITECTURES}")
 target_include_directories(tensorlite
                            PUBLIC "${CMAKE_SOURCE_DIR}/include"
+                           PUBLIC "${CMAKE_SOURCE_DIR}/3rdparty/FP16/include"
                            PRIVATE "${CMAKE_SOURCE_DIR}/src")
 target_compile_definitions(tensorlite PRIVATE -DTENSORLITE_EXPORTS)
 target_compile_features(tensorlite PUBLIC cxx_std_17)
