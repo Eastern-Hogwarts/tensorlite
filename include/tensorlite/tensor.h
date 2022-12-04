@@ -562,7 +562,7 @@ public:
                                     Device device = Device::DefaultDevice());
 
   TENSORLITE_DLL static Tensor Zeros(TensorShape shape, DataType dtype,
-                                    Device device = Device::DefaultDevice());
+                                     Device device = Device::DefaultDevice());
 
   // Contiguous
 
