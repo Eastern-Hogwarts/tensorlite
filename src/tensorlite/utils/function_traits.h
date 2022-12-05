@@ -81,6 +81,38 @@ DEFINE_IS_FUNCTION_WITH_ARITY(ternary, 3);
 
 #undef DEFINE_IS_FUNCTION_WITH_ARITY
 
+template <typename T>
+struct function_reference : public function_reference<typename function_traits<T>::type> {};
+
+template <typename R, typename ...Args>
+struct function_reference<R(Args...)> {
+  using func_type = R(Args...);
+  using CallbackFnType = R(intptr_t, Args...);
+  using Self = function_reference<R(Args...)>;
+  CallbackFnType* callback_ = nullptr;
+  intptr_t func_ptr_;
+
+  template <typename Callable>
+  static R CallbackFn(intptr_t fn_ptr, Args... args) {
+    return (*reinterpret_cast<Callable*>(fn_ptr))(std::forward<Args>(args)...);
+  }
+
+  template <typename Callable,
+  typename std::enable_if_t<!std::is_same_v<
+      std::remove_reference_t<Callable>, function_reference>>* = nullptr,
+    typename std::enable_if_t<std::is_convertible_v<
+      std::invoke_result_t<Callable&&, Args&&...>, R>>* = nullptr>
+  function_reference(
+    Callable&& callable
+  ) : func_ptr_(reinterpret_cast<intptr_t>(&callable))
+    , callback_(CallbackFn<std::remove_reference_t<Callable>>) {}
+
+  // template <typename... CallArgs>
+  R operator()(Args... args) {
+    return callback_(func_ptr_, std::forward<Args>(args)...);
+  }
+};
+
 } // namespace tl
 
 #endif // TENSORLITE_UTILS_FUNCTION_TRAITS_H_
