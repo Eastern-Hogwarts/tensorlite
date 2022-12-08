@@ -23,6 +23,9 @@ namespace tl {
  */
 class TensorShape {
 public:
+  // type of element of tensor shapes
+  using elem_t = int64_t;
+
   // Max rank of tensors
   static constexpr size_t kMaxTensorRank = 16;
 
@@ -37,7 +40,7 @@ public:
   TensorShape(const std::vector<IndexTy> &shape) {
     assert(shape.size() <= kMaxTensorRank);
     for (auto i = 0; i < shape.size(); ++i) {
-      shape_[i] = static_cast<int64_t>(shape[i]);
+      shape_[i] = static_cast<elem_t>(shape[i]);
     }
     rank_ = shape.size();
   }
@@ -60,7 +63,7 @@ public:
    * \tparam IndexTy The data type of the return vector
    * \return std::enable_if_t<std::is_integral_v<IndexTy>, std::vector<IndexTy>>
    */
-  template <typename IndexTy = int64_t>
+  template <typename IndexTy = elem_t>
   std::enable_if_t<std::is_integral_v<IndexTy>, std::vector<IndexTy>>
   ToVector() const {
     std::vector<IndexTy> ret(rank_);
@@ -76,7 +79,7 @@ public:
    * \tparam IndexTy The data type of the return vector
    * \return std::enable_if_t<std::is_integral_v<IndexTy>, std::vector<IndexTy>>
    */
-  template <typename IndexTy = int64_t>
+  template <typename IndexTy = elem_t>
   std::enable_if_t<std::is_integral_v<IndexTy>, std::vector<IndexTy>>
   ReverseShape() const {
     std::vector<IndexTy> ret(rank_);
@@ -103,19 +106,19 @@ public:
   /**
    * \brief Return a pointer pointing to the underlying shape data buffer
    *
-   * \return const int64_t*
+   * \return const elem_t*
    */
-  const int64_t *RawShapePtr() const { return shape_.data(); }
+  const elem_t *RawShapePtr() const { return shape_.data(); }
 
   /**
    * \brief Return a pointer pointing to the underlying shape data buffer
    *
-   * \return int64_t*
+   * \return elem_t*
    */
-  int64_t *RawShapePtr() { return shape_.data(); }
+  elem_t *RawShapePtr() { return shape_.data(); }
 
   /**
-   * \brief Return the rank of this tensor shape object
+   * \brief Return the rank (num_of_axes) of this tensor shape object
    *
    * \return size_t
    */
@@ -124,11 +127,11 @@ public:
   /**
    * \brief Return total number of elements of this tensor shape object
    *
-   * \return int64_t
+   * \return elem_t
    */
-  int64_t NumElem() const {
+  elem_t NumElem() const {
     return std::reduce(shape_.begin(), shape_.begin() + rank_, 1LL,
-                       [](int64_t s0, int64_t s1) { return s0 * s1; });
+                       [](elem_t s0, elem_t s1) { return s0 * s1; });
   }
 
   /**
@@ -142,17 +145,17 @@ public:
    * \brief Return i-th element of this shape object
    *
    * \param idx index value
-   * \return const int64_t&
+   * \return const elem_t&
    */
-  const int64_t &operator[](int idx) const { return this->operator[](idx); }
+  const elem_t &operator[](int idx) const { return this->operator[](idx); }
 
   /**
    * \brief Return i-th element of this shape object
    *
    * \param idx index value
-   * \return int64_t&
+   * \return elem_t&
    */
-  int64_t &operator[](int idx) {
+  elem_t &operator[](int idx) {
     assert(idx < rank_);
     return shape_[idx];
   }
@@ -187,7 +190,7 @@ public:
 
 protected:
   // this could have negative elements
-  std::array<int64_t, kMaxTensorRank> shape_;
+  std::array<elem_t, kMaxTensorRank> shape_;
 
   // a.k.a num_dims, the number of dimensions of this tensor
   size_t rank_ = 0;
@@ -196,6 +199,8 @@ protected:
 /**
  * \brief TensorShape with stride
  *
+ * \note The most significant axis is at the beginning of the underlying array
+ * (index 0).
  */
 class TensorShapeWithStride : public TensorShape {
 public:
@@ -206,7 +211,7 @@ public:
       : TensorShape(shape) {
     assert(shape.size() == stride.size());
     for (auto i = 0; i < stride.size(); ++i) {
-      stride_[i] = static_cast<int64_t>(stride[i]);
+      stride_[i] = static_cast<elem_t>(stride[i]);
     }
   }
 
@@ -226,9 +231,9 @@ public:
    * \brief Return i-th stride of this shape object
    *
    * \param idx index value
-   * \return const int64_t&
+   * \return const elem_t&
    */
-  const int64_t &Stride(int idx) const {
+  const elem_t &Stride(int idx) const {
     assert(idx < rank_);
     return stride_[idx];
   }
@@ -237,9 +242,9 @@ public:
    * \brief Return i-th stride of this shape object
    *
    * \param idx index value
-   * \return int64_t&
+   * \return elem_t&
    */
-  int64_t &Stride(int idx) {
+  elem_t &Stride(int idx) {
     assert(idx < rank_);
     return stride_[idx];
   }
@@ -250,7 +255,7 @@ public:
    * \tparam IndexTy The data type of the return vector
    * \return std::enable_if_t<std::is_integral_v<IndexTy>, std::vector<IndexTy>>
    */
-  template <typename IndexTy = int64_t>
+  template <typename IndexTy = elem_t>
   std::enable_if_t<std::is_integral_v<IndexTy>, std::vector<IndexTy>>
   ReverseStride() const {
     std::vector<IndexTy> ret(rank_);
@@ -278,16 +283,16 @@ public:
   /**
    * \brief Return a pointer pointing to the underlying stride data buffer
    *
-   * \return const int64_t*
+   * \return const elem_t*
    */
-  const int64_t *RawStridePtr() const { return stride_.data(); }
+  const elem_t *RawStridePtr() const { return stride_.data(); }
 
   /**
    * \brief Return a pointer pointing to the underlying stride data buffer
    *
-   * \return int64_t*
+   * \return elem_t*
    */
-  int64_t *RawStridePtr() { return stride_.data(); }
+  elem_t *RawStridePtr() { return stride_.data(); }
 
   /**
    * \brief Check whether two TensorShapeWithStride object are equal
@@ -354,7 +359,7 @@ public:
   }
 
 protected:
-  std::array<int64_t, kMaxTensorRank> stride_;
+  std::array<elem_t, kMaxTensorRank> stride_;
 };
 
 /**
@@ -450,16 +455,25 @@ public:
   /**
    * \brief Get the logically size of this tensor
    *
-   * \return int64_t
+   * \return TensorShape::elem_t
    */
-  int64_t TensorSize() const { return GetNumElems() * dtype_.Size(); }
+  TensorShape::elem_t TensorSize() const {
+    return GetNumElems() * dtype_.Size();
+  }
 
   /**
    * \brief Get the number of elements in this tensor
    *
+   * \return TensorShape::elem_t
+   */
+  TensorShape::elem_t GetNumElems() const { return shape_.NumElem(); }
+
+  /**
+   * \brief Get the rank(num_of_axes) of this tensor.
+   *
    * \return size_t
    */
-  int64_t GetNumElems() const { return shape_.NumElem(); }
+  size_t Rank() const { return shape_.Rank(); }
 
   /**
    * \brief Return a pointer with specific type pointing to the underlying
@@ -536,7 +550,7 @@ public:
    * \param device Device that this tensor resides in.
    * \return Tensor
    */
-  template <typename IndexTy = int64_t,
+  template <typename IndexTy = TensorShape::elem_t,
             std::enable_if_t<std::is_integral_v<IndexTy>> * = nullptr>
   static Tensor Empty(const std::vector<IndexTy> &shape, DataType dtype,
                       size_t alignment = 0,
