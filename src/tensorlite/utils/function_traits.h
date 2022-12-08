@@ -81,37 +81,61 @@ DEFINE_IS_FUNCTION_WITH_ARITY(ternary, 3);
 
 #undef DEFINE_IS_FUNCTION_WITH_ARITY
 
+/**
+ * \brief An efficient, type-erasing, non-owning reference to a callable. This
+ * is intended for use as the type of a function parameter that is not used
+ * after the function in question returns.
+ *
+ * \note This class does not own the callable, so it is not in general safe to
+ * store a function_ref.
+ */
 template <typename T>
-struct function_reference : public function_reference<typename function_traits<T>::type> {};
+struct function_reference
+    : public function_reference<typename function_traits<T>::type> {};
 
-template <typename R, typename ...Args>
-struct function_reference<R(Args...)> {
+template <typename R, typename... Args> struct function_reference<R(Args...)> {
   using func_type = R(Args...);
   using CallbackFnType = R(intptr_t, Args...);
   using Self = function_reference<R(Args...)>;
-  CallbackFnType* callback_ = nullptr;
+  CallbackFnType *callback_ = nullptr;
   intptr_t func_ptr_;
 
   template <typename Callable>
   static R CallbackFn(intptr_t fn_ptr, Args... args) {
-    return (*reinterpret_cast<Callable*>(fn_ptr))(std::forward<Args>(args)...);
+    return (*reinterpret_cast<Callable *>(fn_ptr))(std::forward<Args>(args)...);
   }
 
-  template <typename Callable,
-  typename std::enable_if_t<!std::is_same_v<
-      std::remove_reference_t<Callable>, function_reference>>* = nullptr,
-    typename std::enable_if_t<std::is_convertible_v<
-      std::invoke_result_t<Callable&&, Args&&...>, R>>* = nullptr>
-  function_reference(
-    Callable&& callable
-  ) : func_ptr_(reinterpret_cast<intptr_t>(&callable))
-    , callback_(CallbackFn<std::remove_reference_t<Callable>>) {}
+  template <
+      typename Callable,
+      typename std::enable_if_t<!std::is_same_v<
+          std::remove_reference_t<Callable>, function_reference>> * = nullptr,
+      typename std::enable_if_t<std::is_convertible_v<
+          std::invoke_result_t<Callable &&, Args &&...>, R>> * = nullptr>
+  function_reference(Callable &&callable)
+      : func_ptr_(reinterpret_cast<intptr_t>(&callable)),
+        callback_(CallbackFn<std::remove_reference_t<Callable>>) {}
 
-  // template <typename... CallArgs>
   R operator()(Args... args) {
     return callback_(func_ptr_, std::forward<Args>(args)...);
   }
 };
+
+/**
+ * \brief Get the Function Ref object
+ *
+ * \tparam Callable The callable type
+ * \param callable The callable object
+ * \return function_reference<
+ * typename function_traits<std::remove_reference_t<Callable>>::type>
+ */
+template <typename Callable>
+function_reference<
+    typename function_traits<std::remove_reference_t<Callable>>::type>
+GetFunctionRef(Callable &&callable) {
+  return function_reference<
+      typename function_traits<std::remove_reference_t<Callable>>::type>(
+      callable);
+}
 
 } // namespace tl
 
