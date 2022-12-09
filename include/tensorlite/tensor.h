@@ -125,6 +125,21 @@ public:
   size_t Rank() const { return rank_; }
 
   /**
+   * \brief Set a new rank for this shape
+   *
+   * If the new_rank is less than the original one, the extra part will be
+   * dropped
+   *
+   * \param new_rank the value of new rank
+   *
+   * \note This function is dangerous, use it carefully
+   */
+  void ResetRank(size_t new_rank) {
+    assert(new_rank >= 0 && new_rank <= kMaxTensorRank);
+    rank_ = new_rank;
+  }
+
+  /**
    * \brief Return total number of elements of this tensor shape object
    *
    * \return elem_t
@@ -159,6 +174,22 @@ public:
     assert(idx < rank_);
     return shape_[idx];
   }
+
+  /**
+   * \brief Return i-th element of this shape object
+   *
+   * \param idx index value
+   * \return elem_t&
+   */
+  elem_t &Shape(int idx) { return this->operator[](idx); }
+
+  /**
+   * \brief Return i-th element of this shape object
+   *
+   * \param idx index value
+   * \return const elem_t&
+   */
+  const elem_t &Shape(int idx) const { return this->operator[](idx); }
 
   /**
    * \brief Check whether two TensorShape object are equal
