@@ -6,9 +6,11 @@
 #include <string_view>
 #include <utility>
 
+#include "tensorlite/macros.h"
+
 namespace tl {
 
-enum class DeviceType { kCPU, kCUDA };
+enum class DeviceType { kCPU, kCUDA, kEmpty };
 
 inline constexpr std::string_view DeviceTypeName(DeviceType type) {
   switch (type) {
@@ -16,6 +18,8 @@ inline constexpr std::string_view DeviceTypeName(DeviceType type) {
     return "cpu";
   case DeviceType::kCUDA:
     return "cuda";
+  case DeviceType::kEmpty:
+    return "empty";
   default:
     return "unknown";
   }
@@ -119,6 +123,24 @@ public:
    * \return Device
    */
   static Device DefaultDevice() { return CpuDevice(); }
+
+  /**
+   * \brief Get an empty device, this is useful when std::optional is not
+   * available
+   *
+   * \return Device
+   */
+  static Device EmptyDevice() { return Device(0, DeviceType::kEmpty); }
+
+  /**
+   * \brief Check whether this device is an empty device
+   */
+  bool IsEmpty() const { return type_ == DeviceType::kEmpty; }
+
+  /**
+   * \brief Set the current device
+   */
+  TENSORLITE_DLL void SetCurrentDevice() const;
 
 private:
   int id_;
