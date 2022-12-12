@@ -4,6 +4,7 @@ project(TENSORLITE LANGUAGES CXX VERSION 0.1)
 
 set(CMAKE_CUDA_ARCHITECTURES 75 CACHE STRING "The compute capability id of this cuda arch")
 option(BUILD_TEST "whether build test for ths project" ON)
+option(ENABLE_OPENMP "whether use openmp" ON)
 
 # use c++17 standard
 set(CMAKE_CXX_STANDARD 17)
@@ -52,6 +53,16 @@ target_include_directories(tensorlite
 target_compile_definitions(tensorlite PRIVATE -DTENSORLITE_EXPORTS)
 target_compile_features(tensorlite PUBLIC cxx_std_17)
 target_link_libraries(tensorlite CUDART)
+
+if (ENABLE_OPENMP)
+  target_compile_definitions(tensorlite PRIVATE -DUSE_OPENMP)
+  message(STATUS "Enable OpenMP")
+  if (MSVC)
+    target_compile_options(tensorlite PRIVATE "/openmp")
+  else (MSVC)
+    target_compile_options(tensorlite PRIVATE "-fopenmp")
+  endif (MSVC)
+endif (ENABLE_OPENMP)
 
 if(BUILD_TEST)
   message(STATUS "Build with unittest")
