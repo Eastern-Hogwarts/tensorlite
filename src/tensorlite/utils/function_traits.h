@@ -32,10 +32,15 @@ struct function_traits
 
 // normal function
 template <typename R, typename... Args> struct function_traits<R(Args...)> {
-  using return = R;
-  using args = std::tuple<Args...>;
+  using return_t = R;
+  using arg_tuple = std::tuple<Args...>;
   using type = R(Args...);
+
+  // num of arguments this function takes
   static constexpr size_t arity = sizeof...(Args);
+
+  // num of all variables (include return)
+  static constexpr size_t rank = arity + (std::is_void_v<R> ? 0 : 1);
 
   template <size_t i> struct arg {
     using type = typename std::tuple_element_t<i, args>;
