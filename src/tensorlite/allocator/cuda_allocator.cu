@@ -1,6 +1,6 @@
 #include "tensorlite/allocator/cuda_allocator.h"
 #include "tensorlite/allocator/utils.h"
-#include "tensorlite/utils/cuda_common.cuh"
+#include "tensorlite/utils/cuda_common.h"
 #include "tensorlite/utils/logging.h"
 #include <cuda_runtime.h>
 
