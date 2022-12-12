@@ -2,6 +2,8 @@
 
 #include <algorithm>
 
+#include "tensorlite/utils/logging.h"
+
 namespace tl {
 
 void TensorIterator::FixTensors() {
@@ -157,6 +159,61 @@ void TensorIterator::CompressShape() {
   }
   shape_.resize(new_rank);
   has_shape_compressed_ = true;
+}
+
+std::vector<size_t> TensorIterator::GetStridesInBytes() const {
+  size_t num_tensors = NumTensors();
+  size_t rank = Rank();
+  std::vector<size_t> strides(num_tensors * rank, 0);
+
+  for (size_t t = 0; t < num_tensors; ++t) {
+    size_t dtype_size = operands_[t].GetDataType().Size();
+    for (size_t i = 0; i < rank; ++i) {
+      strides[i + t * rank] =
+          operands_[t].GetShapeWithStride().Stride(i) * dtype_size;
+    }
+  }
+
+  return std::move(strides);
+}
+
+void TensorIterator::ForEach(loop2d_t loop) {
+  CHECK(IsValid());
+
+  // init data ptrs
+  size_t num_tensors = NumTensors();
+  size_t rank = Rank();
+  std::vector<char *> base_dptrs(num_tensors);
+  for (size_t i = 0; i < num_tensors; ++i) {
+    base_dptrs[i] = reinterpret_cast<char *>(operands_[i].RawPtr());
+  }
+
+  // init stride for loop
+  size_t stride_axis = std::max(rank, 2ULL);
+  int stride_idx = static_cast<int>(stride_axis - 1);
+  std::vector<size_t> loop_stride(num_tensors * stride_axis, 0);
+  for (int i = static_cast<int>(rank - 1); i >= 0; --i, --stride_idx) {
+    for (size_t t = 0; t < operands_.size(); ++t) {
+      loop_stride[stride_idx * num_tensors + t] =
+          operands_[t].GetShapeWithStride().Stride(i) *
+          operands_[t].GetDataType().Size();
+    }
+  }
+  size_t inner_size = shape_[rank - 1];
+  size_t outer_size = (rank > 1) ? shape_[rank - 2] : 1;
+
+  if (rank <= 2) {
+    loop(base_dptrs.data(), loop_stride.data(), inner_size, outer_size);
+  } else {
+    auto counter = IndexCounter(shape_);
+    std::vector<char *> dptrs(num_tensors);
+    std::vector<size_t> stride_bytes = GetStridesInBytes();
+    while (!counter.IsFinish()) {
+      GetDataPtrs(dptrs, base_dptrs, counter.Index(), stride_bytes);
+      loop(dptrs.data(), loop_stride.data(), inner_size, outer_size);
+      counter.Advance(rank - 3);
+    }
+  }
 }
 
 } // namespace tl

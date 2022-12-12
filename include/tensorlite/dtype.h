@@ -376,6 +376,13 @@ public:
     return os;
   }
 
+  /**
+   * \brief Get the Tag object
+   *
+   * \return DataTypeTag
+   */
+  DataTypeTag GetTag() const { return tag_; }
+
 private:
   /**
    * \brief Get data type tag from its name

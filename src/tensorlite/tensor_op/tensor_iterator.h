@@ -1,6 +1,8 @@
 #ifndef TENSORLITE_TENSOR_OP_TENSOR_ITERATOR_H_
 #define TENSORLITE_TENSOR_OP_TENSOR_ITERATOR_H_
 
+#include <cstdint>
+#include <cstdlib>
 #include <vector>
 
 #include "tensorlite/tensor.h"
@@ -8,6 +10,107 @@
 #include "tensorlite/utils/tool_functions.h"
 
 namespace tl {
+
+/**
+ * \brief A range on one dimension (axis)
+ *
+ * \tparam IndexTy Type of index
+ */
+template <typename IndexTy> struct IndexRange {
+  IndexTy start;
+  IndexTy end;
+  IndexRange() = default;
+  IndexRange(IndexTy s, IndexTy e) : start(s), end(e) {}
+};
+
+/**
+ * \brief A helper class for multi-axes looping.
+ *
+ * You can view this class as an variable index vector with shape.
+ */
+class IndexCounter {
+public:
+  IndexCounter() = default;
+
+  /**
+   * \brief Construct a new IndexCounter object
+   *
+   * \param shape The shape of corresponding multi-dimensional loop
+   */
+  IndexCounter(const std::vector<shape_elem_t> &shape)
+      : shape_(shape), index_(std::vector<shape_elem_t>(shape.size(), 0)) {}
+
+  /**
+   * \brief Check whether this loop is finish (whether this index reaching to
+   * the end)
+   */
+  bool IsFinish() const {
+    if (overflow_)
+      return true;
+    bool finish = true;
+    for (size_t i = 0; i < Rank(); ++i) {
+      finish &= (index_[i] >= shape_[i]);
+    }
+    return finish;
+  }
+
+  /**
+   * \brief Advance the index along a specific axis with a specific step size
+   *
+   * \param axis_idx The axis where the index to be advanced
+   * \param step Step size, default = 1
+   */
+  void Advance(size_t axis_idx, shape_elem_t step = 1) {
+    CHECK(axis_idx < Rank());
+    shape_elem_t carry = step;
+    for (size_t i = axis_idx; i <= axis_idx; --i) {
+      index_[i] += carry;
+      carry = index_[i] / shape_[i];
+      index_[i] %= shape_[i];
+    }
+    if (carry)
+      overflow_ = true;
+  }
+
+  /**
+   * \brief Reset the index to all zeros
+   */
+  void Reset() {
+    memset(index_.data(), 0, sizeof(shape_elem_t) * index_.size());
+    overflow_ = false;
+  }
+
+  /**
+   * \brief Get index vector
+   *
+   * \return const std::vector<shape_elem_t>&
+   */
+  const std::vector<shape_elem_t> &Index() const { return index_; }
+
+  /**
+   * \brief Get shape vector
+   *
+   * \return const std::vector<shape_elem_t>&
+   */
+  const std::vector<shape_elem_t> &Shape() const { return shape_; }
+
+  /**
+   * \brief Number of axes of this multi-dimensional loop
+   *
+   * \return size_t
+   */
+  size_t Rank() const { return shape_.size(); }
+
+private:
+  // The shape of corresponding loop
+  std::vector<shape_elem_t> shape_;
+
+  // The index value
+  std::vector<shape_elem_t> index_;
+
+  // whether current index value if overflow
+  bool overflow_;
+};
 
 /**
  * \brief TensorIterator is a helper class for element-wise operations, such as
@@ -23,9 +126,6 @@ namespace tl {
  * \note this class is not thread-safe, each thread should have its own copy
  */
 class TensorIterator {
-
-  using shape_elem_t = TensorShape::elem_t;
-
 public:
   TensorIterator() = default;
 
@@ -143,6 +243,25 @@ public:
     CompressShape();
   }
 
+  /**
+   * \brief Get strides in bytes of all tensors in this iterator
+   *
+   * \return std::vector<size_t> A 1-dim vector with size equals to
+   *         NumTensor() * Rank() holding all strides in bytes.
+   */
+  std::vector<size_t> GetStridesInBytes() const;
+
+  using loop2d_t =
+      function_reference<void(char **, const size_t *, size_t, size_t)>;
+
+  /**
+   * \brief Iterator over a Loop2d object, this specific function is for
+   * elementwise tensor op on CPU device.
+   *
+   * \param loop2d_ref The Loop2d Object
+   */
+  void ForEach(loop2d_t loop2d_ref);
+
 private:
   /**
    * \brief Fix input/output tensors of this iterator.
@@ -211,6 +330,10 @@ private:
    *       of tensors' strides and shapes.
    */
   void CompressAxes(int dim0, int dim1);
+
+  void GetDataPtrs(std::vector<char *> &dptrs, const std::vector<char *> &base,
+                   const std::vector<shape_elem_t> &index,
+                   const std::vector<size_t> &stride_bytes) const;
 
 private:
   // when tensors are fixed, operands_ will hold all
