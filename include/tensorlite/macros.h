@@ -17,12 +17,20 @@
 #endif // _WIN32
 #endif // TENSORLITE_DLL
 
-// #define RESTRICT __restrict__
+#define RESTRICT __restrict__
 
-// #define TENSOR_KERNEL __global__
-// #define TENSOR_HOST   __host__
-// #define TENSOR_DEVICE __device__
-// #define TENSOR_HOST_DEVICE TENSOR_HOST TENSOR_DEVICE
-// #define CUDA_LAMBDA TENSOR_DEVICE TENSOR_HOST
+#if true // TODO: change this to ENABLE_CUDA
+#define TENSOR_KERNEL __global__
+#define TENSOR_HOST __host__
+#define TENSOR_DEVICE __device__
+#define TENSOR_HOST_DEVICE TENSOR_HOST TENSOR_DEVICE
+#define CUDA_LAMBDA TENSOR_DEVICE TENSOR_HOST
+#else
+#define TENSOR_KERNEL
+#define TENSOR_HOST
+#define TENSOR_DEVICE
+#define TENSOR_HOST_DEVICE
+#define CUDA_LAMBDA
+#endif
 
 #endif // TENSORLITE_MACROS_H_
