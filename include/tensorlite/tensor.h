@@ -5,6 +5,7 @@
 #include <cassert>
 #include <memory>
 #include <numeric>
+#include <optional>
 #include <type_traits>
 #include <vector>
 
@@ -609,33 +610,76 @@ public:
   TENSORLITE_DLL static Tensor Zeros(TensorShape shape, DataType dtype,
                                      Device device = Device::DefaultDevice());
 
-  // Contiguous
-
-  // Copy
-
-  // Transpose
-
-  // Transfer
-
-  // View
-
-  // Cast
-
-  // Reshape
-
-  // Fill
-
   // Uniform
+  TENSORLITE_DLL static Tensor
+  Uniform(TensorShape shape, Scalar low = Scalar(0), Scalar high = Scalar(1),
+          DataType dtype = DataType(DataTypeTag::kFloat64),
+          Device device = Device::DefaultDevice());
 
   // Normal
+  TENSORLITE_DLL static Tensor
+  Normal(TensorShape shape, Scalar mean = Scalar(0), Scalar stddev = Scalar(1),
+         DataType dtype = DataType(DataTypeTag::kFloat64),
+         Device device = Device::DefaultDevice());
 
   // SameAs
+  TENSORLITE_DLL static Tensor
+  SameAs(const Tensor &other, bool contiguous = true,
+         std::optional<DataType> dtype = std::nullopt,
+         std::optional<Device> device = std::nullopt);
 
   // Full
+  template <typename DataTy,
+            std::enable_if_t<support_crt_v<DataTy>> * = nullptr>
+  static Tensor Full(TensorShape shape, DataTy val, size_t alignment = 0,
+                     Device device = Device::DefaultDevice()) {
+    Tensor new_tensor =
+        Tensor::Empty(shape, crt_to_dtype_v<DataTy>, alignment, device);
+    return new_tensor.Fill(val);
+  }
+
+  TENSORLITE_DLL static Tensor Full(TensorShape shape, Scalar val,
+                                    size_t alignment = 0,
+                                    Device device = Device::DefaultDevice());
+
+  // Contiguous
+  TENSORLITE_DLL Tensor Contiguous() const;
+
+  // Copy
+  TENSORLITE_DLL Tensor Copy() const;
+
+  // Transpose
+  TENSORLITE_DLL Tensor Transpose(size_t i, size_t j) const;
+  Tensor Transpose(const std::vector<size_t> &perm) const;
+  TENSORLITE_DLL Tensor Transpose_(size_t i, size_t j);
+  Tensor Transpose_(const std::vector<size_t> &perm_);
+
+  // Transfer
+  TENSORLITE_DLL Tensor Transfer(Device device) const;
+
+  // View
+  TENSORLITE_DLL Tensor View(TensorShape view_shape) const;
+
+  // Cast
+  TENSORLITE_DLL Tensor Cast(DataType dtype) const;
+
+  // Reshape
+  TENSORLITE_DLL Tensor Reshape(TensorShape new_shape) const;
 
   // Fill
+  template <typename DataTy,
+            std::enable_if_t<support_crt_v<DataTy>> * = nullptr>
+  void Fill(DataTy val) {
+    size_t num_bytes = sizeof(DataTy);
+    return Tensor::FillInBytes(*this, reinterpret_cast<void *>(&val),
+                               num_bytes);
+  }
+
+  TENSORLITE_DLL void Fill(Scalar val);
 
   // FillInBytes
+  TENSORLITE_DLL static Tensor FillInBytes(Tensor &t, void *val,
+                                           size_t num_bytes);
 
 private:
   //
@@ -647,6 +691,8 @@ private:
   //
   BufferPtr buffer_;
 };
+
+using shape_elem_t = TensorShape::elem_t;
 
 } // namespace tl
 
