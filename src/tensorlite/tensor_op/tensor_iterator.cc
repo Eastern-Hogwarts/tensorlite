@@ -48,7 +48,7 @@ void TensorIterator::BroadcastShape() {
 
     // move shape elements to make them align at the least
     // significant axis
-    for (auto i = max_rank - 1; i >= offset; --i) {
+    for (auto i = max_rank - 1; i >= offset && i < max_rank; --i) {
       tensor_shape.Shape(i) = tensor_shape.Shape(i - offset);
       tensor_shape.Stride(i) = tensor_shape.Stride(i - offset);
 
@@ -79,13 +79,13 @@ bool TensorIterator::CanCompress(int dim0, int dim1) const {
     return false;
 
   // squeeze
-  if (shape_[dim0] == 1 || shape_[dim1] == 0)
+  if (shape_[dim0] == 1 || shape_[dim1] == 1)
     return true;
 
   for (const auto &tensor : operands_) {
     const auto &shape = tensor.GetShapeWithStride();
-    if (shape.Shape(dim0) != (shape.Shape(dim1) * shape.Stride(dim1)) &&
-        shape.Stride(dim1) != 0) {
+    if (shape.Stride(dim0) != (shape.Shape(dim1) * shape.Stride(dim1)) &&
+        shape.Stride(dim1) * shape.Stride(dim0) != 0) {
       return false;
     }
   }
@@ -99,7 +99,7 @@ void TensorIterator::CompressAxes(int dim0, int dim1) {
   for (auto &tensor : operands_) {
     auto &shape = tensor.GetShapeWithStride();
     shape.Shape(dim1) *= shape.Shape(dim0);
-    if (shape.Stride(dim0) != 0) { // 0 when axis_size == 1
+    if (shape.Stride(dim1) == 0) { // 0 when axis_size == 1
       shape.Stride(dim1) = shape.Stride(dim0);
     }
 
@@ -213,6 +213,24 @@ void TensorIterator::ForEach(loop2d_t loop) {
       loop(dptrs.data(), loop_stride.data(), inner_size, outer_size);
       counter.Advance(rank - 3);
     }
+  }
+}
+
+void TensorIterator::GetDataPtrs(
+    std::vector<char *> &dptrs, const std::vector<char *> &base,
+    const std::vector<shape_elem_t> &index,
+    const std::vector<size_t> &stride_bytes) const {
+  size_t num_tensors = NumTensors();
+  size_t rank = Rank();
+  CHECK_EQ(dptrs.size(), num_tensors);
+  CHECK_EQ(index.size(), rank);
+
+  for (size_t t = 0; t < num_tensors; ++t) {
+    size_t offset = 0;
+    for (size_t i = 0; i < rank; ++i) {
+      offset += index[i] * stride_bytes[t * rank + i];
+    }
+    dptrs[t] = base[t] + offset;
   }
 }
 
