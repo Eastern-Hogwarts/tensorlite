@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "tensorlite/tensor.h"
+#include "tensorlite/utils/function_traits.h"
 #include "tensorlite/utils/logging.h"
 #include "tensorlite/utils/tool_functions.h"
 

@@ -187,7 +187,7 @@ template <typename Op> decltype(auto) MakeLoop2d(Op &&op) {
  * \param elem_op A callable object. The element-wise operation to be performed.
  */
 template <typename Op> void CPUContiguousKernel(TensorIterator &iter, Op &&op) {
-  CHECK(iter.Valid());
+  CHECK(iter.IsValid());
   using traits = function_traits<Op>;
   size_t num_elem = iter.NumElem();
   constexpr size_t num_tensors = traits::rank;
@@ -200,10 +200,10 @@ template <typename Op> void CPUContiguousKernel(TensorIterator &iter, Op &&op) {
 #endif
   for (size_t t = 0; t < num_tensors; ++t) {
     base_ptrs[t] = reinterpret_cast<char *>(iter.Tensors()[t].RawPtr());
-    elem_sizes[t] = iter.Tensors()[t].ElemSize();
+    elem_sizes[t] = iter.Tensors()[t].GetDataType().Size();
   }
 
-  BasicCpuLoopFunc<Op>(elem_op, base_ptrs.data(), elem_sizes.data(), num_elem);
+  BasicCpuLoopFunc<Op>(op, base_ptrs.data(), elem_sizes.data(), num_elem);
 }
 
 /**
@@ -214,7 +214,7 @@ template <typename Op> void CPUContiguousKernel(TensorIterator &iter, Op &&op) {
  * \param elem_op A callable object. The element-wise operation to be performed.
  */
 template <typename Op>
-void CPUElemwiseKernel(TensorIterator& iter, Op&& elem_op) {
+void CPUElemwiseKernel(TensorIterator &iter, Op &&elem_op) {
   Loop2d<Op> loop = MakeLoop2d(std::forward<Op>(elem_op));
   iter.ForEach(loop);
 }

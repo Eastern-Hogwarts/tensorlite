@@ -13,7 +13,7 @@ template <typename DataTy> void CpuFillKernel(Tensor &tensor, DataTy val) {
   TensorIterator iter;
   iter.AddOutput(tensor);
   iter.Build();
-  CPUContiguousKernel(iter, []() -> DataTy { return val; })
+  CPUContiguousKernel(iter, [=]() -> DataTy { return val; });
 }
 
 template void CpuFillKernel<uint8_t>(Tensor &t, uint8_t val);

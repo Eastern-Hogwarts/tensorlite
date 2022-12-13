@@ -45,53 +45,50 @@ Tensor Tensor::Empty(TensorShape shape, DataType dtype, size_t alignment,
 
 Tensor Tensor::Ones(TensorShape shape, DataType dtype, Device device) {
   Tensor new_tensor = Tensor::Empty(shape, dtype, 0, device);
-  DTYPE_SWITCH(dtype.GetTag(), [&](){
-    new_tensor.Fill(static_cast<scalar_t>(1));
-  });
+  DTYPE_SWITCH(dtype.GetTag(),
+               [&]() { new_tensor.Fill(static_cast<scalar_t>(1)); });
   return new_tensor;
 }
 
 Tensor Tensor::Zeros(TensorShape shape, DataType dtype, Device device) {
   Tensor new_tensor = Tensor::Empty(shape, dtype, 0, device);
-  DTYPE_SWITCH(dtype.GetTag(), [&](){
-    new_tensor.Fill(static_cast<scalar_t>(0));
-  });
+  DTYPE_SWITCH(dtype.GetTag(),
+               [&]() { new_tensor.Fill(static_cast<scalar_t>(0)); });
   return new_tensor;
 }
 
-template <typename T>
-Tensor FillImpl(Tensor& t, T val) {
+template <typename T> Tensor FillImpl(Tensor &t, T val) {
   switch (t.GetDevice().GetType()) {
-    case DeviceType::kCPU:
-      cpu::CpuFillKernel(t, val);
-      break;
-    case DeviceType::kCUDA:
-      cuda::CudaFillKernel(t, val);
-      break;
-    default:
-      LOG_ERROR << "unknown device type\n";
-      break;
+  case DeviceType::kCPU:
+    cpu::CpuFillKernel(t, val);
+    break;
+  case DeviceType::kCUDA:
+    cuda::CudaFillKernel(t, val);
+    break;
+  default:
+    LOG_ERROR << "unknown device type\n";
+    break;
   }
   return t;
 }
 
 Tensor Tensor::FillInBytes(Tensor &t, void *val, size_t num_bytes) {
   switch (num_bytes) {
-    case 1:
-      FillImpl<uint8_t>(t, *(reinterpret_cast<uint8_t*>(val)));
-      break;
-    case 2:
-      FillImpl<uint16_t>(t, *(reinterpret_cast<uint16_t*>(val)));
-      break;
-    case 4:
-      FillImpl<uint32_t>(t, *(reinterpret_cast<uint32_t*>(val)));
-      break;
-    case 8:
-      FillImpl<uint64_t>(t, *(reinterpret_cast<uint64_t*>(val)));
-      break;
-    default:
-      LOG_ERROR << "Unsupported data type size\n";
-      break;
+  case 1:
+    FillImpl<uint8_t>(t, *(reinterpret_cast<uint8_t *>(val)));
+    break;
+  case 2:
+    FillImpl<uint16_t>(t, *(reinterpret_cast<uint16_t *>(val)));
+    break;
+  case 4:
+    FillImpl<uint32_t>(t, *(reinterpret_cast<uint32_t *>(val)));
+    break;
+  case 8:
+    FillImpl<uint64_t>(t, *(reinterpret_cast<uint64_t *>(val)));
+    break;
+  default:
+    LOG_ERROR << "Unsupported data type size\n";
+    break;
   }
   return t;
 }

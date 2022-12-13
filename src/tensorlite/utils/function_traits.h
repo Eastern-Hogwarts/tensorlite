@@ -43,7 +43,7 @@ template <typename R, typename... Args> struct function_traits<R(Args...)> {
   static constexpr size_t rank = arity + (std::is_void_v<R> ? 0 : 1);
 
   template <size_t i> struct arg {
-    using type = typename std::tuple_element_t<i, args>;
+    using type = typename std::tuple_element_t<i, arg_tuple>;
   };
 };
 

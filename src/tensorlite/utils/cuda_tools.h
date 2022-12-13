@@ -85,7 +85,7 @@ invoke(const func_t &f, char *const *data, const index_t *strides, int i) {
  */
 template <typename ShapeElemType, size_t NARGS> struct OffsetCalculator {
 
-  using TensorShape::kMaxTensorRank;
+  static constexpr size_t kMaxTensorRank = ::tl::TensorShape::kMaxTensorRank;
 
   OffsetCalculator(size_t num_axes, const std::vector<ShapeElemType> &shape,
                    const std::vector<ShapeElemType> &strides,
@@ -197,8 +197,8 @@ CUDAContiguousKernel(TensorIterator &iter, Op &&op) {
   constexpr size_t unroll = sizeof(arg0_t) >= 4 ? 2 : 4;
   cudaElemwiseKernelImpl<128, unroll>(
       iter.NumElem(), [=] CUDA_LAMBDA(size_t idx) {
-        size_t offset[num_tensors];
-        for (int i = 0; i < num_tensors; ++i) {
+        size_t offset[traits::rank];
+        for (int i = 0; i < traits::rank; ++i) {
           offset[i] = idx * elem_sizes[i];
         }
         arg0_t *out = (arg0_t *)(base_ptrs[0] + offset[0]);
@@ -235,8 +235,8 @@ CUDAContiguousKernel(TensorIterator &iter, Op &&op) {
   constexpr size_t unroll = sizeof(arg0_t) >= 4 ? 2 : 4;
   cudaElemwiseKernelImpl<128, unroll>(
       iter.NumElem(), [=] CUDA_LAMBDA(size_t idx) {
-        size_t offset[num_tensors];
-        for (int i = 0; i < num_tensors; ++i) {
+        size_t offset[traits::rank];
+        for (int i = 0; i < traits::rank; ++i) {
           offset[i] = idx * elem_sizes[i];
         }
         invoke(op, &base_ptrs[0], &offset[0], 1);
