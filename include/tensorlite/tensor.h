@@ -136,7 +136,7 @@ public:
    * \note This function is dangerous, use it carefully
    */
   void ResetRank(size_t new_rank) {
-    assert(new_rank >= 0 && new_rank <= kMaxTensorRank);
+    assert(new_rank <= kMaxTensorRank);
     rank_ = new_rank;
   }
 
@@ -163,7 +163,10 @@ public:
    * \param idx index value
    * \return const elem_t&
    */
-  const elem_t &operator[](int idx) const { return this->operator[](idx); }
+  const elem_t &operator[](int idx) const {
+    assert(idx < rank_);
+    return shape_[idx];
+  }
 
   /**
    * \brief Return i-th element of this shape object
@@ -671,8 +674,7 @@ public:
             std::enable_if_t<support_crt_v<DataTy>> * = nullptr>
   void Fill(DataTy val) {
     size_t num_bytes = sizeof(DataTy);
-    return Tensor::FillInBytes(*this, reinterpret_cast<void *>(&val),
-                               num_bytes);
+    Tensor::FillInBytes(*this, reinterpret_cast<void *>(&val), num_bytes);
   }
 
   TENSORLITE_DLL void Fill(Scalar val);
