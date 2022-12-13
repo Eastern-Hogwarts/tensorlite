@@ -3,6 +3,7 @@
 
 #include <array>
 #include <cassert>
+#include <initializer_list>
 #include <memory>
 #include <numeric>
 #include <optional>
@@ -45,6 +46,11 @@ public:
     }
     rank_ = shape.size();
   }
+
+  template <typename IndexTy,
+            std::enable_if_t<std::is_integral_v<IndexTy>> * = nullptr>
+  TensorShape(std::initializer_list<IndexTy> init)
+      : TensorShape(std::vector<IndexTy>(init)) {}
 
   TensorShape() = default;
 
