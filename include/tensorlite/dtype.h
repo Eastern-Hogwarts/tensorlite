@@ -272,40 +272,6 @@ IS_UNSIGNED_INTEGRAL_CASE(uint64_t);
 #undef IS_UNSIGNED_INTEGRAL_CASE
 
 /**
- * \brief A scalar type used to store all types supported
- */
-class Scalar {
-  using ValueType = std::variant<int8_t, uint8_t, int32_t, uint32_t, int64_t,
-                                 uint64_t, fp16_t, float, double, bool>;
-
-public:
-  Scalar() = default;
-
-  template <typename T> Scalar(T val) : val_(val) {}
-
-  template <typename T> T To() const {
-    return std::visit([](auto &&arg) -> T { return static_cast<T>(arg); },
-                      val_);
-  }
-
-#define DEFINE_CAST(type)                                                      \
-  operator type() const { return To<type>(); }
-
-  DEFINE_CAST(float)
-  DEFINE_CAST(double)
-  DEFINE_CAST(int8_t)
-  DEFINE_CAST(uint8_t)
-  DEFINE_CAST(int32_t)
-  DEFINE_CAST(uint32_t)
-  DEFINE_CAST(int64_t)
-  DEFINE_CAST(uint64_t)
-  DEFINE_CAST(bool)
-
-private:
-  ValueType val_;
-};
-
-/**
  * \brief The data type of a tensor
  *
  */
@@ -430,6 +396,49 @@ constexpr std::string_view DataType::TagToString(DataTypeTag tag) {
     return "invalid";
   }
 }
+
+/**
+ * \brief A scalar type used to store all types supported
+ */
+class Scalar {
+  using ValueType = std::variant<int8_t, uint8_t, int32_t, uint32_t, int64_t,
+                                 uint64_t, fp16_t, float, double, bool>;
+
+public:
+  Scalar() = default;
+
+  template <typename T> Scalar(T val) : val_(val) {}
+
+  template <typename T> T To() const {
+    return std::visit([](auto &&arg) -> T { return static_cast<T>(arg); },
+                      val_);
+  }
+
+  DataType GetDataType() const {
+    return DataType(std::visit(
+        [](auto &&arg) {
+          return crt_to_dtype_v<
+              std::remove_cv_t<std::remove_reference_t<decltype(arg)>>>;
+        },
+        val_));
+  }
+
+#define DEFINE_CAST(type)                                                      \
+  operator type() const { return To<type>(); }
+
+  DEFINE_CAST(float)
+  DEFINE_CAST(double)
+  DEFINE_CAST(int8_t)
+  DEFINE_CAST(uint8_t)
+  DEFINE_CAST(int32_t)
+  DEFINE_CAST(uint32_t)
+  DEFINE_CAST(int64_t)
+  DEFINE_CAST(uint64_t)
+  DEFINE_CAST(bool)
+
+private:
+  ValueType val_;
+};
 
 } // namespace tl
 

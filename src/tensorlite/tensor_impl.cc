@@ -38,11 +38,6 @@ Tensor Tensor::Empty(TensorShape shape, DataType dtype, size_t alignment,
                 dtype);
 }
 
-#define TENSOR_OP_NOT_IMPL                                                     \
-  return Tensor(nullptr, TensorShapeWithStride(), DataType())
-
-#undef TENSOR_OP_NOT_IMPL
-
 Tensor Tensor::Ones(TensorShape shape, DataType dtype, Device device) {
   Tensor new_tensor = Tensor::Empty(shape, dtype, 0, device);
   DTYPE_SWITCH(dtype.GetTag(),
@@ -91,6 +86,28 @@ Tensor Tensor::FillInBytes(Tensor &t, void *val, size_t num_bytes) {
     break;
   }
   return t;
+}
+
+Tensor Tensor::SameAs(const Tensor &other, bool contiguous,
+                      std::optional<DataType> dtype,
+                      std::optional<Device> device) {
+  TensorShapeWithStride new_shape =
+      contiguous ? TensorShapeWithStride::GetContiguousShape(other.GetShape())
+                 : other.GetShapeWithStride();
+  DataType new_dtype = dtype.value_or(other.GetDataType());
+  Device new_device = device.value_or(other.GetDevice());
+  return Tensor::Empty(new_shape, new_dtype, other.GetAlignment(), new_device);
+}
+
+Tensor Tensor::Full(TensorShape shape, Scalar val, size_t alignment,
+                    Device device) {
+  // TODO: change to default empty tensor when possible
+  std::optional<Tensor> new_tensor;
+  DTYPE_SWITCH(val.GetDataType().GetTag(), [&]() {
+    new_tensor =
+        Tensor::Full<scalar_t>(shape, val.To<scalar_t>(), alignment, device);
+  });
+  return new_tensor.value();
 }
 
 } // namespace tl

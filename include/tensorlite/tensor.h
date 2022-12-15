@@ -47,6 +47,12 @@ public:
     rank_ = shape.size();
   }
 
+  /**
+   * \brief Construct a new TensorShape object from initializer_list
+   *
+   * \tparam IndexTy
+   * \param init
+   */
   template <typename IndexTy,
             std::enable_if_t<std::is_integral_v<IndexTy>> * = nullptr>
   TensorShape(std::initializer_list<IndexTy> init)
@@ -237,6 +243,8 @@ protected:
   size_t rank_ = 0;
 };
 
+using shape_elem_t = TensorShape::elem_t;
+
 /**
  * \brief TensorShape with stride
  *
@@ -411,6 +419,7 @@ class Tensor {
   using BufferPtr = std::shared_ptr<Buffer>;
 
 public:
+  // TODO: add default empty tensor here.
   Tensor() = delete;
 
   /**
@@ -567,6 +576,22 @@ public:
   const TensorShape &GetShape() const { return shape_; }
 
   /**
+   * \brief Get the i-th shape element.
+   *
+   * \param idx index value.
+   * \return shape_elem_t&
+   */
+  shape_elem_t &GetShape(size_t idx) { return shape_.Shape(idx); }
+
+  /**
+   * \brief Get the i-th shape element.
+   *
+   * \param idx index value.
+   * \return const shape_elem_t&
+   */
+  const shape_elem_t &GetShape(size_t idx) const { return shape_.Shape(idx); }
+
+  /**
    * \brief Get tensor shape with strides
    *
    * \return TensorShapeWithStride&
@@ -601,7 +626,7 @@ public:
 
   /**
    * \brief Create an empty tensor with given shape, dtype, alignment and
-   * device. If alignment == 0, use the size of data type as its alignment
+   * device. If alignment == 0, use the size of data type as its alignment.
    *
    * \param shape Shape of this tensor
    * \param dtype Data type of this tensor
@@ -613,9 +638,26 @@ public:
                                      size_t alignment = 0,
                                      Device device = Device::DefaultDevice());
 
+  /**
+   * \brief Create an all-one tensor with the given shape, ddta type and device.
+   *
+   * \param shape The shape of this tensor.
+   * \param dtype The data type of this tensor.
+   * \param device The device that this tensor resides.
+   * \return Tensor
+   */
   TENSORLITE_DLL static Tensor Ones(TensorShape shape, DataType dtype,
                                     Device device = Device::DefaultDevice());
 
+  /**
+   * \brief Create an all-zero tensor with the given shape, data type and
+   * device.
+   *
+   * \param shape The shape of this tensor.
+   * \param dtype The data type of this tensor.
+   * \param device The device that this tensor resides.
+   * \return Tensor
+   */
   TENSORLITE_DLL static Tensor Zeros(TensorShape shape, DataType dtype,
                                      Device device = Device::DefaultDevice());
 
@@ -631,22 +673,55 @@ public:
          DataType dtype = DataType(DataTypeTag::kFloat64),
          Device device = Device::DefaultDevice());
 
-  // SameAs
+  /**
+   * \brief Create a new tensor with the same shape as the other tensor.
+   *
+   * \param other The other tensor.
+   * \param contiguous If true, the new tensor will be contiguous no metter
+   *                   whether the other tensor is contiguous or not.
+   * \param dtype The data type of the new tensor. If not given, use the data
+   *              type of the other tensor.
+   * \param device The device of the new tensor. If not given, use the device of
+   *               the other tensor.
+   * \return Tensor
+   */
   TENSORLITE_DLL static Tensor
   SameAs(const Tensor &other, bool contiguous = true,
          std::optional<DataType> dtype = std::nullopt,
          std::optional<Device> device = std::nullopt);
 
-  // Full
+  /**
+   * \brief Get a new tensor with all elements equal to a given value.
+   *
+   * \tparam DataTy The data type of this tensor in c-type.
+   * \param shape The shape of this new tensor.
+   * \param val The value of all elements of the new tensor.
+   * \param alignment The alignment requirement of the new tensor. If 0, use the
+   * size of its data type.
+   * \param device The device that the new tensor resides in.
+   * \return Tensor
+   */
   template <typename DataTy,
             std::enable_if_t<support_crt_v<DataTy>> * = nullptr>
   static Tensor Full(TensorShape shape, DataTy val, size_t alignment = 0,
                      Device device = Device::DefaultDevice()) {
-    Tensor new_tensor =
-        Tensor::Empty(shape, crt_to_dtype_v<DataTy>, alignment, device);
-    return new_tensor.Fill(val);
+    Tensor new_tensor = Tensor::Empty(shape, DataType(crt_to_dtype_v<DataTy>),
+                                      alignment, device);
+    new_tensor.Fill(val);
+    return new_tensor;
   }
 
+  /**
+   * \brief Get a new tensor with all elements equal to a given scalar
+   *
+   * \param shape The shape of this new tensor.
+   * \param val The scalar value of all elements of the new tensor.
+   * \param alignment The alignment requirement of the new tensor. If 0, use the
+   * size of its data type.
+   * \param device The device that the new tensor resides
+   * in.
+   * \return TENSORLITE_DLL
+   */
   TENSORLITE_DLL static Tensor Full(TensorShape shape, Scalar val,
                                     size_t alignment = 0,
                                     Device device = Device::DefaultDevice());
@@ -699,8 +774,6 @@ private:
   //
   BufferPtr buffer_;
 };
-
-using shape_elem_t = TensorShape::elem_t;
 
 } // namespace tl
 
