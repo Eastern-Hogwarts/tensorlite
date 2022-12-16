@@ -103,11 +103,57 @@ Tensor Tensor::Full(TensorShape shape, Scalar val, size_t alignment,
                     Device device) {
   // TODO: change to default empty tensor when possible
   std::optional<Tensor> new_tensor;
+
+  // TODO: use std::visit directly? We need a better dispatch method here.
   DTYPE_SWITCH(val.GetDataType().GetTag(), [&]() {
     new_tensor =
         Tensor::Full<scalar_t>(shape, val.To<scalar_t>(), alignment, device);
   });
   return new_tensor.value();
+}
+
+template <typename T>
+void TensorElemCopyImpl(const Tensor& src, Tensor& dst) {
+  switch (src.GetDevice().GetType()) {
+  case DeviceType::kCPU:
+    cpu::CpuCopyKernel<T>(src, dst);
+    break;
+  case DeviceType::kCUDA:
+    cuda::CudaCopyKernel<T>(src, dst);
+    break;
+  default:
+    LOG_ERROR << "unknown device type\n";
+    break;
+  }
+}
+
+void TensorElemCopy(const Tensor& src, Tensor& dst, size_t elem_size) {
+  switch (elem_size) {
+  case 1:
+    TensorElemCopyImpl<uint8_t>(src, dst);
+    break;
+  case 2:
+    TensorElemCopyImpl<uint16_t>(src, dst);
+    break;
+  case 4:
+    TensorElemCopyImpl<uint32_t>(src, dst);
+    break;
+  case 8:
+    TensorElemCopyImpl<uint64_t>(src, dst);
+    break;
+  default:
+    LOG_ERROR << "Unsupported data type size\n";
+    break;
+  }
+}
+
+Tensor Tensor::Contiguous() const {
+  if (IsContiguous()) {
+    return *this;
+  }
+  Tensor contiguous_tensor = Tensor::SameAs(*this);
+  TensorElemCopy(*this, contiguous_tensor, this->GetDataType().Size());
+  return contiguous_tensor;
 }
 
 } // namespace tl

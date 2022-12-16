@@ -72,3 +72,17 @@ TEST(TestCpuTensor, TestCpuTensorFull) {
     EXPECT_EQ(ptr[i], val);
   }
 }
+
+TEST(TestCpuTensor, TestCpuTensorContiguous) {
+  std::vector<tl::shape_elem_t> shape{2, 3, 4};
+
+  // TODO: use random init here
+  tl::Tensor t1 = tl::Tensor::Ones(shape, tl::DataType("double"));
+  t1.Transpose_({2, 1, 0});
+  EXPECT_FALSE(t1.IsContiguous());
+
+  auto t2 = t1.Contiguous();
+  EXPECT_TRUE(t2.IsContiguous());
+
+  // TODO: check values are all equal
+}

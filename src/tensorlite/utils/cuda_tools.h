@@ -88,7 +88,7 @@ template <typename ShapeElemType, size_t NARGS> struct OffsetCalculator {
   static constexpr size_t kMaxTensorRank = ::tl::TensorShape::kMaxTensorRank;
 
   OffsetCalculator(size_t num_axes, const std::vector<ShapeElemType> &shape,
-                   const std::vector<ShapeElemType> &strides,
+                   const std::vector<size_t> &strides,
                    const std::array<size_t, NARGS> &elem_size)
       : num_axes_(num_axes) {
     CHECK_LE(num_axes, kMaxTensorRank);
@@ -136,8 +136,8 @@ template <typename ShapeElemType, size_t NARGS> struct OffsetCalculator {
   size_t num_axes_;
   ShapeElemType shape_[kMaxTensorRank]; // std::array is an experimental feature
                                         // in libcu++
-  ShapeElemType strides_[kMaxTensorRank]
-                        [std::max<ShapeElemType>(NARGS, ShapeElemType(1))];
+  size_t strides_[kMaxTensorRank]
+                 [std::max<ShapeElemType>(NARGS, ShapeElemType(1))];
   size_t elem_size_[std::max<size_t>(NARGS, size_t(1))];
 };
 
@@ -255,7 +255,7 @@ CudaContiguousKernel(TensorIterator &iter, Op &&op) {
  */
 template <typename Op>
 std::enable_if_t<std::is_void_v<typename function_traits<Op>::return_t>>
-CudaElemwiseKernel(Tensoriterator& iter, Op&& op) {
+CudaElemwiseKernel(TensorIterator& iter, Op&& op) {
   CHECK(iter.IsValid());
   using traits = function_traits<Op>;
   using arg0_t = typename traits::return_t;
@@ -294,7 +294,7 @@ CudaElemwiseKernel(Tensoriterator& iter, Op&& op) {
  */
 template <typename Op>
 std::enable_if_t<!std::is_void_v<typename function_traits<Op>::return_t>>
-CudaElemwiseKernel(Tensoriterator& iter, Op&& op) {
+CudaElemwiseKernel(TensorIterator& iter, Op&& op) {
   CHECK(iter.IsValid());
   using traits = function_traits<Op>;
   using arg0_t = typename traits::return_t;

@@ -9,6 +9,7 @@
 #include <optional>
 #include <type_traits>
 #include <vector>
+#include <unordered_set>
 
 #include "tensorlite/buffer.h"
 #include "tensorlite/device.h"
@@ -235,6 +236,42 @@ public:
    */
   bool operator!=(const TensorShape &other) { return !(*this == other); }
 
+  /**
+   * \brief Transpose two axes.
+   */
+  void Transpose(size_t i, size_t j) {
+    assert(i < rank_ && j < rank_);
+    std::swap(shape_[i], shape_[j]);
+  }
+
+  /**
+   * \brief Transpose a tensor shape with a given permutation vector.
+   *
+   * \param perm The input permutation vector.
+   */
+  void Transpose(const std::vector<size_t>& perm) {
+    assert(IsValidPermutation(perm));
+    std::array<elem_t, kMaxTensorRank> shape_copy;
+    std::copy_n(shape_.begin(), rank_, shape_copy.begin());
+    for (auto i = 0; i < rank_; ++i) {
+      shape_[i] = shape_copy[perm[i]];
+    }
+  }
+
+  /**
+   * \brief Check whether a permutation vector is valid.
+   *
+   * \param perm The permutation vector.
+   */
+  bool IsValidPermutation(const std::vector<size_t>& perm) {
+    std::unordered_set<size_t> axis_appear;
+    for (const auto& p : perm) {
+      if (p >= rank_ || axis_appear.count(p)) return false;
+      axis_appear.insert(p);
+    }
+    return true;
+  }
+
 protected:
   // this could have negative elements
   std::array<elem_t, kMaxTensorRank> shape_;
@@ -377,6 +414,28 @@ public:
    * \brief Check whether this tensor shape is contiguous
    */
   TENSORLITE_DLL bool IsContiguous() const;
+
+  /**
+   * \brief Transpose two axes
+   */
+  void Transpose(size_t i, size_t j) {
+    TensorShape::Transpose(i, j);
+    std::swap(stride_[i], stride_[j]);
+  }
+
+  /**
+   * \brief Transpose a tensor shape with a given permutation vector.
+   *
+   * \param perm The input permutation vector.
+   */
+  void Transpose(const std::vector<size_t>& perm) {
+    TensorShape::Transpose(perm);
+    std::array<elem_t, kMaxTensorRank> stride_copy;
+    std::copy_n(stride_.begin(), rank_, stride_copy.begin());
+    for (auto i = 0; i < rank_; ++i) {
+      stride_[i] = stride_copy[perm[i]];
+    }
+  }
 
   /**
    * \brief Get a contiguous stride from the given shape
@@ -726,17 +785,65 @@ public:
                                     size_t alignment = 0,
                                     Device device = Device::DefaultDevice());
 
-  // Contiguous
+  /**
+   * \brief Return a new tensor with contiguous layout.
+   * The data type and device are the same as the original tensor.
+   *
+   * \return Tensor
+   */
   TENSORLITE_DLL Tensor Contiguous() const;
 
   // Copy
   TENSORLITE_DLL Tensor Copy() const;
 
   // Transpose
-  TENSORLITE_DLL Tensor Transpose(size_t i, size_t j) const;
-  Tensor Transpose(const std::vector<size_t> &perm) const;
-  TENSORLITE_DLL Tensor Transpose_(size_t i, size_t j);
-  Tensor Transpose_(const std::vector<size_t> &perm_);
+
+  /**
+   * \brief Return a new tensor sharing the same data buffer
+   * with the original tensor but with two axes tranposed.
+   *
+   * \param i The first axis.
+   * \param j The second axis.
+   * \return Tensor
+   */
+  Tensor Transpose(size_t i, size_t j) const {
+    Tensor new_tensor = *this;
+    new_tensor.Transpose_(i, j);
+    return new_tensor;
+  }
+
+  /**
+   * \brief Return a new tensor sharing the same data buffer
+   * with the original tensor but with all axes transposed.
+   *
+   * \param perm The permutation vector.
+   * \return Tensor
+   */
+  Tensor Transpose(const std::vector<size_t> &perm) const {
+    Tensor new_tensor = *this;
+    new_tensor.Transpose_(perm);
+    return new_tensor;
+  }
+
+  /**
+   * \brief Transpose the tensor inplace but with data buffer unchanged.
+   *
+   * \param i The first axis.
+   * \param j The second axis.
+   */
+  void Transpose_(size_t i, size_t j) {
+    shape_.Transpose(i, j);
+  }
+
+  /**
+   * \brief Transpose the tensor inplace but with data buffer unchanged.
+   *
+   * \param perm The permutation vector.
+   * \return Tensor
+   */
+  void Transpose_(const std::vector<size_t> &perm) {
+    shape_.Transpose(perm);
+  }
 
   // Transfer
   TENSORLITE_DLL Tensor Transfer(Device device) const;

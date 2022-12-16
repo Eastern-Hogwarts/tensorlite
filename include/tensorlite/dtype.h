@@ -349,6 +349,13 @@ public:
    */
   DataTypeTag GetTag() const { return tag_; }
 
+  /**
+   * \brief Check two data type are the same
+   */
+  bool operator==(const DataType& other) const {
+    return other.tag_ == this->tag_;
+  }
+
 private:
   /**
    * \brief Get data type tag from its name

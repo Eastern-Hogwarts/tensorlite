@@ -140,13 +140,13 @@ public:
 
   TensorIterator &operator=(TensorIterator &&) = default;
 
-  TensorIterator& AddInput(const Tensor &in_tensor) {
+  TensorIterator &AddInput(const Tensor &in_tensor) {
     CHECK(!has_tensors_fixed_);
     inputs_.push_back(in_tensor);
     return *this;
   }
 
-  TensorIterator& AddOutput(const Tensor &out_tensor) {
+  TensorIterator &AddOutput(const Tensor &out_tensor) {
     CHECK(!has_tensors_fixed_);
     outputs_.push_back(out_tensor);
     return *this;
@@ -239,7 +239,7 @@ public:
   /**
    * \brief Fix input/output tensors and build this iterator
    */
-  TensorIterator& Build() {
+  TensorIterator &Build() {
     FixTensors();
     InitializeShape();
     BroadcastShape();
