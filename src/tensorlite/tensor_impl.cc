@@ -112,6 +112,11 @@ Tensor Tensor::Full(TensorShape shape, Scalar val, size_t alignment,
   return new_tensor.value();
 }
 
+void Tensor::Fill(Scalar val) {
+  DTYPE_SWITCH(val.GetDataType().GetTag(),
+               [&]() { this->Fill<scalar_t>(val.To<scalar_t>()); });
+}
+
 template <typename T>
 void TensorElemCopyImpl(const Tensor& src, Tensor& dst) {
   switch (src.GetDevice().GetType()) {
