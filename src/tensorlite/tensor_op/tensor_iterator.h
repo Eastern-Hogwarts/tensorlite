@@ -140,14 +140,16 @@ public:
 
   TensorIterator &operator=(TensorIterator &&) = default;
 
-  void AddInput(const Tensor &in_tensor) {
+  TensorIterator& AddInput(const Tensor &in_tensor) {
     CHECK(!has_tensors_fixed_);
     inputs_.push_back(in_tensor);
+    return *this;
   }
 
-  void AddOutput(const Tensor &out_tensor) {
+  TensorIterator& AddOutput(const Tensor &out_tensor) {
     CHECK(!has_tensors_fixed_);
     outputs_.push_back(out_tensor);
+    return *this;
   }
 
   size_t NumInputs() const {
@@ -237,11 +239,12 @@ public:
   /**
    * \brief Fix input/output tensors and build this iterator
    */
-  void Build() {
+  TensorIterator& Build() {
     FixTensors();
     InitializeShape();
     BroadcastShape();
     CompressShape();
+    return *this;
   }
 
   /**
