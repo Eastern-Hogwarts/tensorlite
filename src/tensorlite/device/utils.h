@@ -2,12 +2,13 @@
 #define TENSORLITE_DEVICE_UTILS_H_
 
 #include "tensorlite/device.h"
+#include "tensorlite/utils/logging.h"
 
 namespace tl {
 
 #define DEVICE_SWITCH_CASE(switch_case, ...)                                   \
   case switch_case: {                                                          \
-    constexpr auto device_v = switch_case;                                     \
+    constexpr auto device_t = switch_case;                                     \
     __VA_ARGS__;                                                               \
     break;                                                                     \
   }
@@ -18,6 +19,9 @@ namespace tl {
     switch (_sv) {                                                             \
       DEVICE_SWITCH_CASE(::tl::DeviceType::kCPU, __VA_ARGS__)                  \
       DEVICE_SWITCH_CASE(::tl::DeviceType::kCUDA, __VA_ARGS__)                 \
+    default:                                                                   \
+      LOG_ERROR << "unknown device type\n";                                    \
+      break;                                                                   \
     }                                                                          \
   }
 

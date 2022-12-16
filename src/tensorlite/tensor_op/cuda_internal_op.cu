@@ -1,6 +1,5 @@
 #include "tensorlite/tensor_op/cuda_internal_op.cuh"
 
-#include "tensorlite/device/data_transfer.h"
 #include "tensorlite/utils/cuda_tools.h"
 #include "tensorlite/utils/logging.h"
 

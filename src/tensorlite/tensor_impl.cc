@@ -1,5 +1,6 @@
 #include "tensorlite/allocator/allocator.h"
 #include "tensorlite/allocator/cpu_allocator.h"
+#include "tensorlite/device/data_transfer.h"
 #include "tensorlite/device/utils.h"
 #include "tensorlite/tensor.h"
 #include "tensorlite/tensor_op/cpu_internal_op.h"
@@ -31,7 +32,7 @@ Tensor Tensor::Empty(TensorShape shape, DataType dtype, size_t alignment,
   BufferPtr buffer_ptr = nullptr;
   alignment = (alignment == 0) ? dtype.Size() : alignment;
   DEVICE_SWITCH(device.GetType(), {
-    buffer_ptr = NewBuffer<device_v>(device.GetId(), buffer_size, alignment);
+    buffer_ptr = NewBuffer<device_t>(device.GetId(), buffer_size, alignment);
   });
 
   return Tensor(buffer_ptr, TensorShapeWithStride::GetContiguousShape(shape),
@@ -53,6 +54,7 @@ Tensor Tensor::Zeros(TensorShape shape, DataType dtype, Device device) {
 }
 
 template <typename T> Tensor FillImpl(Tensor &t, T val) {
+  // TODO: change to DEVICE_SWITCH
   switch (t.GetDevice().GetType()) {
   case DeviceType::kCPU:
     cpu::CpuFillKernel(t, val);
@@ -118,6 +120,7 @@ void Tensor::Fill(Scalar val) {
 }
 
 template <typename T> void TensorElemCopyImpl(const Tensor &src, Tensor &dst) {
+  // TODO: change to DEVICE_SWITCH
   switch (src.GetDevice().GetType()) {
   case DeviceType::kCPU:
     cpu::CpuCopyKernel<T>(src, dst);
@@ -158,6 +161,18 @@ Tensor Tensor::Contiguous() const {
   Tensor contiguous_tensor = Tensor::SameAs(*this);
   TensorElemCopy(*this, contiguous_tensor, this->GetDataType().Size());
   return contiguous_tensor;
+}
+
+Tensor Tensor::Transfer(Device device) const {
+  Tensor new_tensor = Tensor::SameAs(*this, IsContiguous(), std::nullopt, device);
+  DEVICE_SWITCH(GetDevice().GetType(), [&](){
+    constexpr auto src_device_t = device_t;
+    DEVICE_SWITCH(device.GetType(), [&](){
+      constexpr auto dst_device_t = device_t;
+      DataTransfer<src_device_t, dst_device_t>(this->RawPtr(), new_tensor.RawPtr(), this->GetBufferSize(), this->GetDevice().GetId(), device.GetId());
+    });
+  });
+  return new_tensor;
 }
 
 } // namespace tl
