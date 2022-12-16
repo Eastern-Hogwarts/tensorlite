@@ -8,7 +8,7 @@ template <typename DataTy> void CpuCopyKernel(const Tensor &src, Tensor &dst) {
   CHECK_EQ(src.GetDevice(), dst.GetDevice());
   TensorIterator iter;
   iter.AddOutput(dst).AddInput(src).Build();
-  CPUElemwiseKernel(iter, [] (DataTy val) { return val; });
+  CPUElemwiseKernel(iter, [](DataTy val) { return val; });
 }
 
 } // namespace cpu

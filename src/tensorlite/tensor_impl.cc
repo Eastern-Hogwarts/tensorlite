@@ -117,8 +117,7 @@ void Tensor::Fill(Scalar val) {
                [&]() { this->Fill<scalar_t>(val.To<scalar_t>()); });
 }
 
-template <typename T>
-void TensorElemCopyImpl(const Tensor& src, Tensor& dst) {
+template <typename T> void TensorElemCopyImpl(const Tensor &src, Tensor &dst) {
   switch (src.GetDevice().GetType()) {
   case DeviceType::kCPU:
     cpu::CpuCopyKernel<T>(src, dst);
@@ -132,7 +131,7 @@ void TensorElemCopyImpl(const Tensor& src, Tensor& dst) {
   }
 }
 
-void TensorElemCopy(const Tensor& src, Tensor& dst, size_t elem_size) {
+void TensorElemCopy(const Tensor &src, Tensor &dst, size_t elem_size) {
   switch (elem_size) {
   case 1:
     TensorElemCopyImpl<uint8_t>(src, dst);

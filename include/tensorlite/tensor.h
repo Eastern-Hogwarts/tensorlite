@@ -8,8 +8,8 @@
 #include <numeric>
 #include <optional>
 #include <type_traits>
-#include <vector>
 #include <unordered_set>
+#include <vector>
 
 #include "tensorlite/buffer.h"
 #include "tensorlite/device.h"
@@ -249,7 +249,7 @@ public:
    *
    * \param perm The input permutation vector.
    */
-  void Transpose(const std::vector<size_t>& perm) {
+  void Transpose(const std::vector<size_t> &perm) {
     assert(IsValidPermutation(perm));
     std::array<elem_t, kMaxTensorRank> shape_copy;
     std::copy_n(shape_.begin(), rank_, shape_copy.begin());
@@ -263,10 +263,11 @@ public:
    *
    * \param perm The permutation vector.
    */
-  bool IsValidPermutation(const std::vector<size_t>& perm) {
+  bool IsValidPermutation(const std::vector<size_t> &perm) {
     std::unordered_set<size_t> axis_appear;
-    for (const auto& p : perm) {
-      if (p >= rank_ || axis_appear.count(p)) return false;
+    for (const auto &p : perm) {
+      if (p >= rank_ || axis_appear.count(p))
+        return false;
       axis_appear.insert(p);
     }
     return true;
@@ -428,7 +429,7 @@ public:
    *
    * \param perm The input permutation vector.
    */
-  void Transpose(const std::vector<size_t>& perm) {
+  void Transpose(const std::vector<size_t> &perm) {
     TensorShape::Transpose(perm);
     std::array<elem_t, kMaxTensorRank> stride_copy;
     std::copy_n(stride_.begin(), rank_, stride_copy.begin());
@@ -720,13 +721,13 @@ public:
   TENSORLITE_DLL static Tensor Zeros(TensorShape shape, DataType dtype,
                                      Device device = Device::DefaultDevice());
 
-  // Uniform
+  // TODO: Uniform
   TENSORLITE_DLL static Tensor
   Uniform(TensorShape shape, Scalar low = Scalar(0), Scalar high = Scalar(1),
           DataType dtype = DataType(DataTypeTag::kFloat64),
           Device device = Device::DefaultDevice());
 
-  // Normal
+  // TODO: Normal
   TENSORLITE_DLL static Tensor
   Normal(TensorShape shape, Scalar mean = Scalar(0), Scalar stddev = Scalar(1),
          DataType dtype = DataType(DataTypeTag::kFloat64),
@@ -793,10 +794,8 @@ public:
    */
   TENSORLITE_DLL Tensor Contiguous() const;
 
-  // Copy
+  // TODO: Copy
   TENSORLITE_DLL Tensor Copy() const;
-
-  // Transpose
 
   /**
    * \brief Return a new tensor sharing the same data buffer
@@ -831,9 +830,7 @@ public:
    * \param i The first axis.
    * \param j The second axis.
    */
-  void Transpose_(size_t i, size_t j) {
-    shape_.Transpose(i, j);
-  }
+  void Transpose_(size_t i, size_t j) { shape_.Transpose(i, j); }
 
   /**
    * \brief Transpose the tensor inplace but with data buffer unchanged.
@@ -841,23 +838,26 @@ public:
    * \param perm The permutation vector.
    * \return Tensor
    */
-  void Transpose_(const std::vector<size_t> &perm) {
-    shape_.Transpose(perm);
-  }
+  void Transpose_(const std::vector<size_t> &perm) { shape_.Transpose(perm); }
 
-  // Transfer
+  // TODO: Transfer
   TENSORLITE_DLL Tensor Transfer(Device device) const;
 
-  // View
+  // TODO: View
   TENSORLITE_DLL Tensor View(TensorShape view_shape) const;
 
-  // Cast
+  // TODO: Cast
   TENSORLITE_DLL Tensor Cast(DataType dtype) const;
 
-  // Reshape
+  // TODO: Reshape
   TENSORLITE_DLL Tensor Reshape(TensorShape new_shape) const;
 
-  // Fill
+  /**
+   * \brief Fill a tensor with given value.
+   *
+   * \tparam DataTy The data type of this tensor.
+   * \param val The value used for filling.
+   */
   template <typename DataTy,
             std::enable_if_t<support_crt_v<DataTy>> * = nullptr>
   void Fill(DataTy val) {
@@ -865,20 +865,32 @@ public:
     Tensor::FillInBytes(*this, reinterpret_cast<void *>(&val), num_bytes);
   }
 
+  /**
+   * \brief Fill a tensor with a given scalar
+   *
+   * \param val The scalar usef for filling.
+   */
   TENSORLITE_DLL void Fill(Scalar val);
 
-  // FillInBytes
+  /**
+   * \brief Fill a tensor with a section of bytes.
+   *
+   * \param t The tensor to be filled.
+   * \param val The section of bytes.
+   * \param num_bytes The size of bytes.
+   * \return Tensor
+   */
   TENSORLITE_DLL static Tensor FillInBytes(Tensor &t, void *val,
                                            size_t num_bytes);
 
 private:
-  //
+  // The data type of this tensor
   DataType dtype_;
 
-  //
+  // The shape of this tensor
   TensorShapeWithStride shape_;
 
-  //
+  // The underlying data buffer
   BufferPtr buffer_;
 };
 

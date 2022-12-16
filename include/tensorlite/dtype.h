@@ -352,7 +352,7 @@ public:
   /**
    * \brief Check two data type are the same
    */
-  bool operator==(const DataType& other) const {
+  bool operator==(const DataType &other) const {
     return other.tag_ == this->tag_;
   }
 

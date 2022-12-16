@@ -1,8 +1,8 @@
 #include "tensorlite/tensor_op/cuda_internal_op.cuh"
 
 #include "tensorlite/device/data_transfer.h"
-#include "tensorlite/utils/logging.h"
 #include "tensorlite/utils/cuda_tools.h"
+#include "tensorlite/utils/logging.h"
 
 namespace tl {
 namespace cuda {
@@ -26,7 +26,8 @@ template <typename DataTy> void CudaCopyKernel(const Tensor &src, Tensor &dst) {
   src.GetDevice().SetCurrentDevice();
   TensorIterator iter;
   iter.AddOutput(dst).AddInput(src).Build();
-  CudaElemwiseKernel(iter, [] CUDA_LAMBDA(DataTy val) -> DataTy { return val; });
+  CudaElemwiseKernel(iter,
+                     [] CUDA_LAMBDA(DataTy val) -> DataTy { return val; });
 }
 
 template void CudaCopyKernel<uint8_t>(const Tensor &src, Tensor &dst);

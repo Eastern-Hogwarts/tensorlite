@@ -249,13 +249,14 @@ CudaContiguousKernel(TensorIterator &iter, Op &&op) {
  * \tparam Op The type of \a 'op'.
  * \param iter The tensor iterator used for element-wise loop.
  * \param op A callable object. The element-wise operation to be performed.
- * \return std::enable_if_t<std::is_void_v<typename function_traits<Op>::return_t>>
+ * \return std::enable_if_t<std::is_void_v<typename
+ * function_traits<Op>::return_t>>
  *
  * \note The input tensors may be not contiguous.
  */
 template <typename Op>
 std::enable_if_t<std::is_void_v<typename function_traits<Op>::return_t>>
-CudaElemwiseKernel(TensorIterator& iter, Op&& op) {
+CudaElemwiseKernel(TensorIterator &iter, Op &&op) {
   CHECK(iter.IsValid());
   using traits = function_traits<Op>;
   using arg0_t = typename traits::return_t;
@@ -272,7 +273,8 @@ CudaElemwiseKernel(TensorIterator& iter, Op&& op) {
   }
   constexpr size_t unroll = sizeof(arg0_t) >= 4 ? 2 : 4;
 
-  OffsetCalculator<shape_elem_t, num_tensors> offset_calc(iter.Rank(), iter.Shape(), iter.GetStridesInBytes(), elem_sizes);
+  OffsetCalculator<shape_elem_t, num_tensors> offset_calc(
+      iter.Rank(), iter.Shape(), iter.GetStridesInBytes(), elem_sizes);
 
   cudaElemwiseKernelImpl<128, unroll>(
       iter.NumElem(), [=] CUDA_LAMBDA(size_t idx) {
@@ -288,13 +290,14 @@ CudaElemwiseKernel(TensorIterator& iter, Op&& op) {
  * \tparam Op The type of \a 'op'.
  * \param iter The tensor iterator used for element-wise loop.
  * \param op A callable object. The element-wise operation to be performed.
- * \return std::enable_if_t<!std::is_void_v<typename function_traits<Op>::return_t>>
+ * \return std::enable_if_t<!std::is_void_v<typename
+ * function_traits<Op>::return_t>>
  *
  * \note The input tensors may be not contiguous.
  */
 template <typename Op>
 std::enable_if_t<!std::is_void_v<typename function_traits<Op>::return_t>>
-CudaElemwiseKernel(TensorIterator& iter, Op&& op) {
+CudaElemwiseKernel(TensorIterator &iter, Op &&op) {
   CHECK(iter.IsValid());
   using traits = function_traits<Op>;
   using arg0_t = typename traits::return_t;
@@ -311,7 +314,8 @@ CudaElemwiseKernel(TensorIterator& iter, Op&& op) {
   }
   constexpr size_t unroll = sizeof(arg0_t) >= 4 ? 2 : 4;
 
-  OffsetCalculator<shape_elem_t, num_tensors> offset_calc(iter.Rank(), iter.Shape(), iter.GetStridesInBytes(), elem_sizes);
+  OffsetCalculator<shape_elem_t, num_tensors> offset_calc(
+      iter.Rank(), iter.Shape(), iter.GetStridesInBytes(), elem_sizes);
 
   cudaElemwiseKernelImpl<128, unroll>(
       iter.NumElem(), [=] CUDA_LAMBDA(size_t idx) {
