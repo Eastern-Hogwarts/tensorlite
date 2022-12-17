@@ -86,3 +86,38 @@ TEST(TestCpuTensor, TestCpuTensorContiguous) {
 
   // TODO: check values are all equal
 }
+
+TEST(TestCpuTensor, TestCpuTensorTransfer) {
+  std::vector<tl::shape_elem_t> shape{2, 3, 4};
+
+  // TODO: use random init here
+  tl::Tensor t1 = tl::Tensor::Ones(shape, tl::DataType("double"));
+
+  // to cpu
+  auto t2 = t1.Transfer(tl::Device::CpuDevice());
+  EXPECT_EQ(t2.GetDevice().Name(), "cpu_0");
+
+  auto *t1_ptr = t1.TypedPtr<double>();
+  auto *t2_ptr = t2.TypedPtr<double>();
+  for (auto i = 0; i < t1.GetNumElems(); ++i) {
+    EXPECT_EQ(t1_ptr[i], t2_ptr[i]);
+  }
+
+  // to cuda
+  auto t3 = t1.Transfer(tl::Device::CudaDevice(0));
+  EXPECT_EQ(t3.GetDevice().Name(), "cuda_0");
+}
+
+TEST(TestCpuTensor, TestCpuTensorCast) {
+  std::vector<tl::shape_elem_t> shape{2, 3, 4};
+  tl::Tensor t1 = tl::Tensor::Ones(shape, tl::DataType("double"));
+
+  auto t2 = t1.Cast(tl::DataType("float"));
+  EXPECT_EQ(t2.GetDataType().Name(), "float32");
+
+  auto *t1_ptr = t1.TypedPtr<double>();
+  auto *t2_ptr = t2.TypedPtr<float>();
+  for (auto i = 0; i < t1.GetNumElems(); ++i) {
+    EXPECT_EQ(t1_ptr[i], static_cast<double>(t2_ptr[i]));
+  }
+}

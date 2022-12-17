@@ -36,12 +36,21 @@ template <typename DataTy> void CudaFillKernel(Tensor &tensor, DataTy val);
  *
  * \tparam DataTy The data type of tensors.
  * \param src Source tensor.
- * \param dst Dstination tensor.
+ * \param dst Destination tensor.
  *
  * \note DO NOT use this kernel directly, this kernel usuall is used to
  * implement other tensor functions like contiguous.
  */
 template <typename DataTy> void CudaCopyKernel(const Tensor &src, Tensor &dst);
+
+/**
+ * \brief Perform data type cast between two tensors.
+ *
+ * \param src The source tensor.
+ * \param dst The destination tensor.
+ * \note: TODO: change this to template with device_type as template args.
+ */
+void CudaCastKernel(const Tensor &src, Tensor &dst);
 
 } // namespace cuda
 } // namespace tl

@@ -31,7 +31,7 @@ Tensor Tensor::Empty(TensorShape shape, DataType dtype, size_t alignment,
   size_t buffer_size = static_cast<size_t>(shape.NumElem() * dtype.Size());
   BufferPtr buffer_ptr = nullptr;
   alignment = (alignment == 0) ? dtype.Size() : alignment;
-  DEVICE_SWITCH(device.GetType(), {
+  DEVICE_SWITCH(device.GetType(), device_t, {
     buffer_ptr = NewBuffer<device_t>(device.GetId(), buffer_size, alignment);
   });
 
@@ -164,15 +164,61 @@ Tensor Tensor::Contiguous() const {
 }
 
 Tensor Tensor::Transfer(Device device) const {
-  Tensor new_tensor = Tensor::SameAs(*this, IsContiguous(), std::nullopt, device);
-  DEVICE_SWITCH(GetDevice().GetType(), [&](){
-    constexpr auto src_device_t = device_t;
-    DEVICE_SWITCH(device.GetType(), [&](){
-      constexpr auto dst_device_t = device_t;
-      DataTransfer<src_device_t, dst_device_t>(this->RawPtr(), new_tensor.RawPtr(), this->GetBufferSize(), this->GetDevice().GetId(), device.GetId());
+  Tensor new_tensor =
+      Tensor::SameAs(*this, IsContiguous(), std::nullopt, device);
+  DEVICE_SWITCH(GetDevice().GetType(), src_device_t, {
+    DEVICE_SWITCH(device.GetType(), dst_device_t, {
+      DataTransfer<src_device_t, dst_device_t>(
+          this->RawPtr(), new_tensor.RawPtr(), this->GetBufferSize(),
+          this->GetDevice().GetId(), device.GetId());
     });
   });
   return new_tensor;
+}
+
+Tensor Tensor::View(TensorShape view_shape) const {
+  CHECK(IsContiguous());
+  CHECK_EQ(view_shape.NumElem(), GetNumElems());
+
+  Tensor view_tensor = *this;
+  view_tensor.shape_ = TensorShapeWithStride::GetContiguousShape(view_shape);
+  return view_tensor;
+}
+
+Tensor Tensor::Copy() const {
+  auto tensor_copy = Tensor::SameAs(*this, IsContiguous());
+  DEVICE_SWITCH(GetDevice().GetType(), device_t, {
+    DataTransfer<device_t, device_t>(
+        this->RawPtr(), tensor_copy.RawPtr(), this->GetBufferSize(),
+        this->GetDevice().GetId(), tensor_copy.GetDevice().GetId());
+  });
+  return tensor_copy;
+}
+
+Tensor Tensor::Cast(DataType dtype) const {
+  auto cast_tensor = Tensor::SameAs(*this, IsContiguous(), dtype);
+
+  // TODO: use DEVICE_SWITCH here.
+  switch (GetDevice().GetType()) {
+  case DeviceType::kCPU:
+    cpu::CpuCastKernel(*this, cast_tensor);
+    break;
+  case DeviceType::kCUDA:
+    cuda::CudaCastKernel(*this, cast_tensor);
+    break;
+  default:
+    LOG_ERROR << "unknown device type!\n";
+    break;
+  }
+  return cast_tensor;
+}
+
+Tensor Tensor::Reshape(TensorShape new_shape) const {
+  if (IsContiguous()) {
+    return this->View(new_shape);
+  } else {
+    return this->Contiguous().View(new_shape);
+  }
 }
 
 } // namespace tl

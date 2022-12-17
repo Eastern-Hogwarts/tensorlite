@@ -44,4 +44,10 @@ std::shared_ptr<Buffer> NewCpuBuffer(int device_id, size_t size, size_t align) {
   }
 }
 
+template <>
+std::shared_ptr<Buffer> NewBuffer<DeviceType::kCPU>(int device_id, size_t size,
+                                                    size_t align) {
+  return NewCpuBuffer(device_id, size, align);
+}
+
 } // namespace tl

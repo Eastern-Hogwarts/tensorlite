@@ -48,8 +48,15 @@ template <typename DerivedTy> struct MemoryAllocator {
  * alignment.
  */
 template <DeviceType Device>
-inline std::shared_ptr<Buffer> NewBuffer(int device_id, size_t size,
-                                         size_t align);
+std::shared_ptr<Buffer> NewBuffer(int device_id, size_t size, size_t align);
+
+/**
+ * \brief
+ *
+ * \param buffer
+ * \return std::shared_ptr<Buffer>
+ */
+std::shared_ptr<Buffer> CopyBuffer(std::shared_ptr<Buffer> buffer);
 
 } // namespace tl
 

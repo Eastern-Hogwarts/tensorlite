@@ -4,6 +4,7 @@
 #include <array>
 #include <cassert>
 #include <initializer_list>
+#include <limits>
 #include <memory>
 #include <numeric>
 #include <optional>
@@ -70,6 +71,41 @@ public:
   TensorShape &operator=(TensorShape &&) = default;
 
   ~TensorShape() = default;
+
+  /**
+   * \brief Deduce a new tensor shape from a view shape (may have -1 as
+   * placeholder) and the number of elements.
+   *
+   * \tparam IndexTy The type of index in view shape.
+   * \param view The input view shape.
+   * \param num_elems The total number of elements.
+   * \return TensorShape
+   */
+  template <
+      typename IndexTy,
+      std::enable_if_t<std::is_integral_v<IndexTy> &&
+                       std::numeric_limits<IndexTy>::is_signed> * = nullptr>
+  static TensorShape DeduceFromView(const std::vector<IndexTy> &view,
+                                    elem_t num_elems) {
+    bool find_negative = false;
+    IndexTy prod = static_cast<IndexTy>(1);
+    std::optional<size_t> deduce_pos = std::nullopt;
+    for (auto i = 0; i < view.size(); ++i) {
+      if (view[i] < 0) {
+        assert(!find_negative);
+        find_negative = true;
+        deduce_pos = i;
+      } else {
+        prod *= view[i];
+      }
+    }
+
+    if (find_negative) {
+      assert(static_cast<IndexTy>(num_elems) % prod == 0);
+      view[deduce_pos.value()] = static_cast<IndexTy>(num_elems) / prod;
+    }
+    return TensorShape(view);
+  }
 
   /**
    * \brief Dump the shape into a vector of given data type.
@@ -794,7 +830,13 @@ public:
    */
   TENSORLITE_DLL Tensor Contiguous() const;
 
-  // TODO: Copy
+  /**
+   * \brief Make a copy of an existing tensor.
+   *
+   * The layout, data type and device information will be preserved.
+   *
+   * \return Tensor
+   */
   TENSORLITE_DLL Tensor Copy() const;
 
   /**
@@ -840,17 +882,81 @@ public:
    */
   void Transpose_(const std::vector<size_t> &perm) { shape_.Transpose(perm); }
 
-  // TODO: Transfer
+  /**
+   * \brief Transfer a tensor to another device
+   *
+   * \param device The target device
+   * \return Tensor
+   */
   TENSORLITE_DLL Tensor Transfer(Device device) const;
 
-  // TODO: View
+  /**
+   * \brief Create a view with another shape of a tensor.
+   *
+   * The tensor should be contiguous.
+   *
+   * \param view_shape The given view shape.
+   * \return Tensor
+   */
   TENSORLITE_DLL Tensor View(TensorShape view_shape) const;
 
-  // TODO: Cast
+  /**
+   * \brief Create a view with another shape of a tensor.
+   *
+   * The tensor should be contiguous.
+   *
+   * \tparam IndexTy The type of elements of the input vector.
+   * \param view_shape_vec The shape of view in vector form.
+   * \return Tensor
+   */
+  template <
+      typename IndexTy,
+      std::enable_if_t<std::is_integral_v<IndexTy> &&
+                       std::numeric_limits<IndexTy>::is_signed> * = nullptr>
+  Tensor View(const std::vector<IndexTy> &view_shape_vec) {
+    TensorShape view_shape =
+        TensorShape::DeduceFromView(view_shape_vec, GetNumElems());
+    return this->View(view_shape);
+  }
+
+  /**
+   * \brief Create a new tensor with all elements casted to a new data type.
+   *
+   * \param dtype The target data type.
+   * \return Tensor
+   */
   TENSORLITE_DLL Tensor Cast(DataType dtype) const;
 
-  // TODO: Reshape
+  /**
+   * \brief Create a new tensor with new shape.
+   *
+   * If the tensor is contiguous, a view will be returned. If not, a
+   * contiguous copy of the original tensor will be returned.
+   *
+   * \param new_shape
+   * \return TENSORLITE_DLL
+   */
   TENSORLITE_DLL Tensor Reshape(TensorShape new_shape) const;
+
+  /**
+   * \brief Create a new tensor with new shape.
+   *
+   * If the tensor is contiguous, a view will be returned. If not, a
+   * contiguous copy of the original tensor will be returned.
+   *
+   * \tparam IndexTy The type of elements of the input vector.
+   * \param new_shape_vec The new shape in vector form.
+   * \return Tensor
+   */
+  template <
+      typename IndexTy,
+      std::enable_if_t<std::is_integral_v<IndexTy> &&
+                       std::numeric_limits<IndexTy>::is_signed> * = nullptr>
+  Tensor Reshape(const std::vector<IndexTy> &new_shape_vec) {
+    TensorShape new_shape =
+        TensorShape::DeduceFromView(new_shape_vec, GetNumElems());
+    return this->Reshape(new_shape);
+  }
 
   /**
    * \brief Fill a tensor with given value.

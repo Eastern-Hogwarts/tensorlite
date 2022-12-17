@@ -15,18 +15,7 @@ namespace cpu {
  * \param tensor The given tensor to be filled.
  * \param val The value used for filling.
  */
-template <typename DataTy> void CpuFillKernel(Tensor &tensor, DataTy val) {
-  DataTy *data = tensor.TypedPtr<DataTy>();
-  TensorIterator iter;
-  iter.AddOutput(tensor);
-  iter.Build();
-  CPUContiguousKernel(iter, [=]() -> DataTy { return val; });
-}
-
-template void CpuFillKernel<uint8_t>(Tensor &t, uint8_t val);
-template void CpuFillKernel<uint16_t>(Tensor &t, uint16_t val);
-template void CpuFillKernel<uint32_t>(Tensor &t, uint32_t val);
-template void CpuFillKernel<uint64_t>(Tensor &t, uint64_t val);
+template <typename DataTy> void CpuFillKernel(Tensor &tensor, DataTy val);
 
 /**
  * \brief This is an elementwise copy kernel where the source and dstination
@@ -43,10 +32,14 @@ template void CpuFillKernel<uint64_t>(Tensor &t, uint64_t val);
  */
 template <typename DataTy> void CpuCopyKernel(const Tensor &src, Tensor &dst);
 
-template void CpuCopyKernel<uint8_t>(const Tensor &src, Tensor &dst);
-template void CpuCopyKernel<uint16_t>(const Tensor &src, Tensor &dst);
-template void CpuCopyKernel<uint32_t>(const Tensor &src, Tensor &dst);
-template void CpuCopyKernel<uint64_t>(const Tensor &src, Tensor &dst);
+/**
+ * \brief Perform data type cast between two tensors.
+ *
+ * \param src The source tensor.
+ * \param dst The destination tensor.
+ * \note: TODO: change this to template with device_type as template args.
+ */
+void CpuCastKernel(const Tensor &src, Tensor &dst);
 
 } // namespace cpu
 } // namespace tl
