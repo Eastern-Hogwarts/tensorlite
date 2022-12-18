@@ -41,5 +41,25 @@ template <typename DataTy> void CpuCopyKernel(const Tensor &src, Tensor &dst);
  */
 void CpuCastKernel(const Tensor &src, Tensor &dst);
 
+/**
+ * \brief Generate tensor elements with an uniform distribution given its lower
+ * and upper boundary.
+ *
+ * \param tensor The target tensor.
+ * \param low The lower boundary.
+ * \param high The upper boundary.
+ */
+void CpuUniformDistKernel(Tensor &tensor, Scalar low, Scalar high);
+
+/**
+ * \brief Generate tensor elements with a normal distribution given its mean and
+ * stddev value.
+ *
+ * \param tensor The target tensor.
+ * \param mean The mean value.
+ * \param stddev The stddev value.
+ */
+void CpuNormalDistKernel(Tensor &tensor, Scalar mean, Scalar stddev);
+
 } // namespace cpu
 } // namespace tl

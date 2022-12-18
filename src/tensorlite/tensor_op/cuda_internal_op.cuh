@@ -52,5 +52,25 @@ template <typename DataTy> void CudaCopyKernel(const Tensor &src, Tensor &dst);
  */
 void CudaCastKernel(const Tensor &src, Tensor &dst);
 
+/**
+ * \brief Generate tensor elements with an uniform distribution given its lower
+ * and upper boundary.
+ *
+ * \param tensor The target tensor.
+ * \param low The lower boundary.
+ * \param high The upper boundary.
+ */
+void CudaUniformDistKernel(Tensor &tensor, Scalar low, Scalar high);
+
+/**
+ * \brief Generate tensor elements with a normal distribution given its mean and
+ * stddev value.
+ *
+ * \param tensor The target tensor.
+ * \param mean The mean value.
+ * \param stddev The stddev value.
+ */
+void CudaNormalDistKernel(Tensor &tensor, Scalar mean, Scalar stddev);
+
 } // namespace cuda
 } // namespace tl

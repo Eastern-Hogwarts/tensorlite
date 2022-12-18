@@ -35,6 +35,22 @@ TEST(TestCpuTensor, TestCpuTensorZeros) {
   }
 }
 
+TEST(TestCpuTensor, TensorCpuTensorUniform) {
+  std::vector<tl::shape_elem_t> shape{2, 3, 4};
+  tl::Tensor t1 = tl::Tensor::Uniform(shape, -1, 1, tl::DataType("float"));
+
+  auto* t1_ptr = t1.TypedPtr<float>();
+  for (auto i = 0; i < t1.GetNumElems(); ++i) {
+    EXPECT_LE(t1_ptr[i], 1);
+    EXPECT_GE(t1_ptr[i], -1);
+  }
+}
+
+TEST(TestCpuTensor, TensorCpuTensorNormal) {
+  std::vector<tl::shape_elem_t> shape{2, 3, 4};
+  tl::Tensor t1 = tl::Tensor::Normal(shape, -1, 1, tl::DataType("float"));
+}
+
 TEST(TestCpuTensor, TestCpuTensorSameAs) {
   std::vector<tl::shape_elem_t> shape{2, 3, 4};
   tl::Tensor t1 = tl::Tensor::Zeros(shape, tl::DataType("double"));
@@ -76,8 +92,7 @@ TEST(TestCpuTensor, TestCpuTensorFull) {
 TEST(TestCpuTensor, TestCpuTensorContiguous) {
   std::vector<tl::shape_elem_t> shape{2, 3, 4};
 
-  // TODO: use random init here
-  tl::Tensor t1 = tl::Tensor::Ones(shape, tl::DataType("double"));
+  tl::Tensor t1 = tl::Tensor::Uniform(shape, 0, 1, tl::DataType("double"));
   t1.Transpose_({2, 1, 0});
   EXPECT_FALSE(t1.IsContiguous());
 
@@ -90,8 +105,7 @@ TEST(TestCpuTensor, TestCpuTensorContiguous) {
 TEST(TestCpuTensor, TestCpuTensorTransfer) {
   std::vector<tl::shape_elem_t> shape{2, 3, 4};
 
-  // TODO: use random init here
-  tl::Tensor t1 = tl::Tensor::Ones(shape, tl::DataType("double"));
+  tl::Tensor t1 = tl::Tensor::Uniform(shape, 0, 1, tl::DataType("double"));
 
   // to cpu
   auto t2 = t1.Transfer(tl::Device::CpuDevice());
@@ -106,6 +120,14 @@ TEST(TestCpuTensor, TestCpuTensorTransfer) {
   // to cuda
   auto t3 = t1.Transfer(tl::Device::CudaDevice(0));
   EXPECT_EQ(t3.GetDevice().Name(), "cuda_0");
+
+  auto t4 = t3.Transfer(tl::Device::CpuDevice());
+  EXPECT_EQ(t4.GetDevice().Name(), "cpu_0");
+
+  auto* t4_ptr = t4.TypedPtr<double>();
+  for (auto i = 0; i < t1.GetNumElems(); ++i) {
+    EXPECT_EQ(t1_ptr[i], t4_ptr[i]);
+  }
 }
 
 TEST(TestCpuTensor, TestCpuTensorCast) {

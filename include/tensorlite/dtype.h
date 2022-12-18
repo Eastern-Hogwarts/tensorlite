@@ -356,6 +356,24 @@ public:
     return other.tag_ == this->tag_;
   }
 
+  /**
+   * \brief Check whether the data type is a floating point type.
+   */
+  bool IsFloat() const {
+    return tag_ == DataTypeTag::kFloat16 || tag_ == DataTypeTag::kFloat32 ||
+           tag_ == DataTypeTag::kFloat64;
+  }
+
+  /**
+   * \brief Check whether the data type is integral type.
+   */
+  bool IsIntegral() const {
+    return tag_ == DataTypeTag::kInt8 || tag_ == DataTypeTag::kInt32 ||
+           tag_ == DataTypeTag::kInt64 || tag_ == DataTypeTag::kUInt8 ||
+           tag_ == DataTypeTag::kUInt32 || tag_ == DataTypeTag::kUInt64 ||
+           tag_ == DataTypeTag::kBool;
+  }
+
 private:
   /**
    * \brief Get data type tag from its name

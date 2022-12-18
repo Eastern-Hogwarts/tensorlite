@@ -35,6 +35,9 @@ set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-relaxed-constexpr") # enable co
 set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -arch=sm_${CMAKE_CUDA_ARCHITECTURES}")
 message(STATUS "Build with CUDA Computation Capability: ${CMAKE_CUDA_ARCHITECTURES}")
 
+# cuRAND
+include("${CMAKE_SOURCE_DIR}/cmake/modules/cuRAND.cmake")
+
 if(NOT DEFINED CMAKE_CUDA_STANDARD)
   set(CMAKE_CUDA_STANDARD 17)
   set(CMAKE_CUDA_STANDARD_REQUIRED ON)
@@ -49,10 +52,11 @@ set_target_properties(tensorlite PROPERTIES CUDA_ARCHITECTURES "${CMAKE_CUDA_ARC
 target_include_directories(tensorlite
                            PUBLIC "${CMAKE_SOURCE_DIR}/include"
                            PUBLIC "${CMAKE_SOURCE_DIR}/3rdparty/FP16/include"
-                           PRIVATE "${CMAKE_SOURCE_DIR}/src")
+                           PRIVATE "${CMAKE_SOURCE_DIR}/src"
+                           PRIVATE "${CURAND_INCLUDE_PATH}")
 target_compile_definitions(tensorlite PRIVATE -DTENSORLITE_EXPORTS)
 target_compile_features(tensorlite PUBLIC cxx_std_17)
-target_link_libraries(tensorlite CUDART)
+target_link_libraries(tensorlite CUDART ${CURAND_LIBRARY})
 
 if (ENABLE_OPENMP)
   target_compile_definitions(tensorlite PRIVATE -DUSE_OPENMP)

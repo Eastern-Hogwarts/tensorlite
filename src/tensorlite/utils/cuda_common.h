@@ -2,6 +2,8 @@
 #define TENSORLOTE_UTILS_CUDA_COMMON_H_
 
 #include "tensorlite/utils/logging.h"
+#include "tensorlite/utils/random.h"
+#include "tensorlite/utils/singleton.h"
 #include <cuda_runtime.h>
 #include <curand.h>
 #include <limits>
@@ -60,5 +62,31 @@ inline std::string curandGetErrorString(curandStatus_t err) {
     return "Unknown error";
   }
 }
+
+namespace tl {
+
+struct CUDAThreadLocalHandles {
+  using CurandSeedType = unsigned long long;
+  curandGenerator_t curand_gen;
+
+  CUDAThreadLocalHandles() {
+    // -- cuRAND -- //
+    CURAND_CALL(curandCreateGenerator(&curand_gen, CURAND_RNG_PSEUDO_XORWOW));
+    CURAND_CALL(curandSetPseudoRandomGeneratorSeed(
+        curand_gen, RandomEngine::ThreadLocal().RandInt<CurandSeedType>(
+                        std::numeric_limits<CurandSeedType>::max())));
+  }
+
+  ~CUDAThreadLocalHandles() {
+    // -- cuRAND -- //
+    CURAND_CALL(curandDestroyGenerator(curand_gen));
+  }
+
+  static CUDAThreadLocalHandles &ThreadLocal() {
+    return ThreadLocalSingleton<CUDAThreadLocalHandles>::Get();
+  }
+};
+
+} // namespace tl
 
 #endif // TENSORLOTE_UTILS_CUDA_COMMON_H_

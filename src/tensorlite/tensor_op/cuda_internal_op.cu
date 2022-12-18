@@ -51,7 +51,92 @@ void CudaCastKernel(const Tensor &src, Tensor &dst) {
       });
     });
   });
-  // CudaContiguousKernel(iter, [])
+}
+
+template <typename DataTy>
+void CudaUniformDistKernelImpl(Tensor &tensor, Scalar low, Scalar high) {
+  static_assert(std::is_same_v<DataTy, float>);
+  DataTy *data = tensor.TypedPtr<DataTy>();
+  size_t num_elem = tensor.GetNumElems();
+  auto gen = CUDAThreadLocalHandles::ThreadLocal().curand_gen;
+  curandGenerateUniform(gen, data, num_elem);
+
+  DataTy scale = high.To<DataTy>() - low.To<DataTy>();
+  DataTy bias = low.To<DataTy>();
+
+  TensorIterator iter;
+  iter.AddInput(tensor).AddOutput(tensor).Build();
+
+  CudaContiguousKernel(iter,
+                       [=] CUDA_LAMBDA(DataTy elem) { return scale * elem + bias; });
+}
+
+template <>
+void CudaUniformDistKernelImpl<double>(Tensor &tensor, Scalar low,
+                                       Scalar high) {
+  double *data = tensor.TypedPtr<double>();
+  size_t num_elem = tensor.GetNumElems();
+  auto gen = CUDAThreadLocalHandles::ThreadLocal().curand_gen;
+  curandGenerateUniformDouble(gen, data, num_elem);
+
+  double scale = high.To<double>() - low.To<double>();
+  double bias = low.To<double>();
+
+  TensorIterator iter;
+  iter.AddInput(tensor).AddOutput(tensor).Build();
+
+  CudaContiguousKernel(iter,
+                       [=] CUDA_LAMBDA(double elem) { return scale * elem + bias; });
+}
+
+void CudaUniformDistKernel(Tensor &tensor, Scalar low, Scalar high) {
+  tensor.GetDevice().SetCurrentDevice();
+
+  if (tensor.GetDataType().GetTag() == DataTypeTag::kFloat16) {
+    Tensor single_tensor = Tensor::SameAs(
+        tensor, true, DataType(DataTypeTag::kFloat32), tensor.GetDevice());
+    CudaUniformDistKernelImpl<float>(single_tensor, low, high);
+    CudaCastKernel(single_tensor, tensor);
+  } else {
+    DTYPE_SWITCH_FLOAT_WITHOUT_HALF(tensor.GetDataType().GetTag(), [&]() {
+      CudaUniformDistKernelImpl<scalar_t>(tensor, low, high);
+    });
+  }
+}
+
+template <typename DataTy>
+void CudaNormalDistKernelImpl(Tensor &tensor, Scalar mean, Scalar stddev) {
+  static_assert(std::is_same_v<DataTy, float>);
+  DataTy *data = tensor.TypedPtr<DataTy>();
+  size_t num_elem = tensor.GetNumElems();
+  auto gen = CUDAThreadLocalHandles::ThreadLocal().curand_gen;
+  curandGenerateNormal(gen, data, num_elem, mean.To<DataTy>(),
+                       stddev.To<DataTy>());
+}
+
+template <>
+void CudaNormalDistKernelImpl<double>(Tensor &tensor, Scalar mean,
+                                      Scalar stddev) {
+  double *data = tensor.TypedPtr<double>();
+  size_t num_elem = tensor.GetNumElems();
+  auto gen = CUDAThreadLocalHandles::ThreadLocal().curand_gen;
+  curandGenerateNormalDouble(gen, data, num_elem, mean.To<double>(),
+                             stddev.To<double>());
+}
+
+void CudaNormalDistKernel(Tensor &tensor, Scalar mean, Scalar stddev) {
+  tensor.GetDevice().SetCurrentDevice();
+
+  if (tensor.GetDataType().GetTag() == DataTypeTag::kFloat16) {
+    Tensor single_tensor = Tensor::SameAs(
+        tensor, true, DataType(DataTypeTag::kFloat32), tensor.GetDevice());
+    CudaNormalDistKernelImpl<float>(single_tensor, mean, stddev);
+    CudaCastKernel(single_tensor, tensor);
+  } else {
+    DTYPE_SWITCH_FLOAT_WITHOUT_HALF(tensor.GetDataType().GetTag(), [&]() {
+      CudaNormalDistKernelImpl<scalar_t>(tensor, mean, stddev);
+    });
+  }
 }
 
 } // namespace cuda

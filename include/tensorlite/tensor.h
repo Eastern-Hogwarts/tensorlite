@@ -757,13 +757,35 @@ public:
   TENSORLITE_DLL static Tensor Zeros(TensorShape shape, DataType dtype,
                                      Device device = Device::DefaultDevice());
 
-  // TODO: Uniform
+  /**
+   * \brief Generate a tensor whose elements follow a given uniform distribution.
+   *
+   * \param shape The shape of the new tensor.
+   * \param low The lower bound of the given uniform distribution.
+   * \param high The upper bound of the givne unform distribution.
+   * \param dtype The data type of the tensor.
+   * \param device The device where the tensor resides.
+   * \return Tensor
+   *
+   * \note Currently we only support floating point data type.
+   */
   TENSORLITE_DLL static Tensor
   Uniform(TensorShape shape, Scalar low = Scalar(0), Scalar high = Scalar(1),
           DataType dtype = DataType(DataTypeTag::kFloat64),
           Device device = Device::DefaultDevice());
 
-  // TODO: Normal
+  /**
+   * \brief Generate a tensor whose elements follow a given normal distribution.
+   *
+   * \param shape The shape of the new tensor.
+   * \param mean The mean value of the given normal distribution.
+   * \param stddev The standard deviation of the given normal distribution.
+   * \param dtype The data type of the tensor.
+   * \param device The device where the tensor resides.
+   * \return Tensor
+   *
+   * \note Currently we only support floating point data type.
+   */
   TENSORLITE_DLL static Tensor
   Normal(TensorShape shape, Scalar mean = Scalar(0), Scalar stddev = Scalar(1),
          DataType dtype = DataType(DataTypeTag::kFloat64),
