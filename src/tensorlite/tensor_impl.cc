@@ -226,33 +226,33 @@ Tensor Tensor::Uniform(TensorShape shape, Scalar low, Scalar high,
   CHECK(dtype.IsFloat());
   Tensor new_tensor = Tensor::Empty(shape, dtype, 0, device);
   switch (device.GetType()) {
-    case DeviceType::kCPU:
-      cpu::CpuUniformDistKernel(new_tensor, low, high);
-      break;
-    case DeviceType::kCUDA:
-      cuda::CudaUniformDistKernel(new_tensor, low, high);
-      break;
-    default:
-      LOG_ERROR << "unknown device type!\n";
-      break;
+  case DeviceType::kCPU:
+    cpu::CpuUniformDistKernel(new_tensor, low, high);
+    break;
+  case DeviceType::kCUDA:
+    cuda::CudaUniformDistKernel(new_tensor, low, high);
+    break;
+  default:
+    LOG_ERROR << "unknown device type!\n";
+    break;
   }
   return new_tensor;
 }
 
 Tensor Tensor::Normal(TensorShape shape, Scalar mean, Scalar stddev,
-                       DataType dtype, Device device) {
+                      DataType dtype, Device device) {
   CHECK(dtype.IsFloat());
   Tensor new_tensor = Tensor::Empty(shape, dtype, 0, device);
   switch (device.GetType()) {
-    case DeviceType::kCPU:
-      cpu::CpuNormalDistKernel(new_tensor, mean, stddev);
-      break;
-    case DeviceType::kCUDA:
-      cuda::CudaNormalDistKernel(new_tensor, mean, stddev);
-      break;
-    default:
-      LOG_ERROR << "unknown device type!\n";
-      break;
+  case DeviceType::kCPU:
+    cpu::CpuNormalDistKernel(new_tensor, mean, stddev);
+    break;
+  case DeviceType::kCUDA:
+    cuda::CudaNormalDistKernel(new_tensor, mean, stddev);
+    break;
+  default:
+    LOG_ERROR << "unknown device type!\n";
+    break;
   }
   return new_tensor;
 }

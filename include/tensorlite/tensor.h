@@ -758,7 +758,8 @@ public:
                                      Device device = Device::DefaultDevice());
 
   /**
-   * \brief Generate a tensor whose elements follow a given uniform distribution.
+   * \brief Generate a tensor whose elements follow a given uniform
+   * distribution.
    *
    * \param shape The shape of the new tensor.
    * \param low The lower bound of the given uniform distribution.

@@ -67,8 +67,8 @@ void CudaUniformDistKernelImpl(Tensor &tensor, Scalar low, Scalar high) {
   TensorIterator iter;
   iter.AddInput(tensor).AddOutput(tensor).Build();
 
-  CudaContiguousKernel(iter,
-                       [=] CUDA_LAMBDA(DataTy elem) { return scale * elem + bias; });
+  CudaContiguousKernel(
+      iter, [=] CUDA_LAMBDA(DataTy elem) { return scale * elem + bias; });
 }
 
 template <>
@@ -85,8 +85,8 @@ void CudaUniformDistKernelImpl<double>(Tensor &tensor, Scalar low,
   TensorIterator iter;
   iter.AddInput(tensor).AddOutput(tensor).Build();
 
-  CudaContiguousKernel(iter,
-                       [=] CUDA_LAMBDA(double elem) { return scale * elem + bias; });
+  CudaContiguousKernel(
+      iter, [=] CUDA_LAMBDA(double elem) { return scale * elem + bias; });
 }
 
 void CudaUniformDistKernel(Tensor &tensor, Scalar low, Scalar high) {

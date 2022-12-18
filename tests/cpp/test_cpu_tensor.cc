@@ -39,7 +39,7 @@ TEST(TestCpuTensor, TensorCpuTensorUniform) {
   std::vector<tl::shape_elem_t> shape{2, 3, 4};
   tl::Tensor t1 = tl::Tensor::Uniform(shape, -1, 1, tl::DataType("float"));
 
-  auto* t1_ptr = t1.TypedPtr<float>();
+  auto *t1_ptr = t1.TypedPtr<float>();
   for (auto i = 0; i < t1.GetNumElems(); ++i) {
     EXPECT_LE(t1_ptr[i], 1);
     EXPECT_GE(t1_ptr[i], -1);
@@ -124,7 +124,7 @@ TEST(TestCpuTensor, TestCpuTensorTransfer) {
   auto t4 = t3.Transfer(tl::Device::CpuDevice());
   EXPECT_EQ(t4.GetDevice().Name(), "cpu_0");
 
-  auto* t4_ptr = t4.TypedPtr<double>();
+  auto *t4_ptr = t4.TypedPtr<double>();
   for (auto i = 0; i < t1.GetNumElems(); ++i) {
     EXPECT_EQ(t1_ptr[i], t4_ptr[i]);
   }
