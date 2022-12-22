@@ -3,8 +3,22 @@ cmake_minimum_required(VERSION 3.18 FATAL_ERROR)
 project(TENSORLITE LANGUAGES CXX VERSION 0.1)
 
 set(CMAKE_CUDA_ARCHITECTURES 75 CACHE STRING "The compute capability id of this cuda arch")
-option(BUILD_TEST "whether build test for ths project" ON)
+
+if(EXISTS ${CMAKE_CURRENT_BINARY_DIR}/config.cmake)
+  include(${CMAKE_CURRENT_BINARY_DIR}/config.cmake)
+else()
+  if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/cmake/config.cmake)
+    include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/config.cmake)
+  endif()
+endif()
+
+# NOTE: do not modify this file to change option values.
+# You can create a config.cmake at build folder
+# and add set(OPTION VALUE) to override these build options.
+# Alernatively, use cmake -DOPTION=VALUE through command-line
+option(BUILD_TEST "whether build test for ths project" OFF)
 option(ENABLE_OPENMP "whether use openmp" ON)
+option(INSTALL_TENSORLITE "whether to install" OFF)
 
 # use c++17 standard
 set(CMAKE_CXX_STANDARD 17)
@@ -78,7 +92,7 @@ if(BUILD_TEST)
     set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
   endif()
 
-  add_subdirectory("${CMAKE_SOURCE_DIR}/3rdparty/googletest")
+  add_subdirectory("${CMAKE_SOURCE_DIR}/3rdparty/googletest" EXCLUDE_FROM_ALL)
   enable_testing()
   include(GoogleTest)
   message(STATUS "Find google test in ${gtest_SOURCE_DIR}")
@@ -87,3 +101,14 @@ if(BUILD_TEST)
   add_subdirectory("${CMAKE_SOURCE_DIR}/tests/cpp")
 endif()
 
+if(INSTALL_TENSORLITE)
+  message(STATUS "Install tensorlite to ${CMAKE_INSTALL_PREFIX}")
+  install(TARGETS tensorlite
+          LIBRARY DESTINATION lib
+          ARCHIVE DESTINATION lib
+          RUNTIME DESTINATION bin)
+  get_target_property(TENSORLITE_INTERFACE_HEADER_DIRS tensorlite INTERFACE_INCLUDE_DIRECTORIES)
+  foreach(dir ${TENSORLITE_INTERFACE_HEADER_DIRS})
+    install(DIRECTORY "${dir}" DESTINATION "${CMAKE_INSTALL_PREFIX}")
+  endforeach(dir ${TENSORLITE_INTERFACE_HEADER_DIRS})
+endif()
