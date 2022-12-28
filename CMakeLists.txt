@@ -64,8 +64,12 @@ add_library(tensorlite SHARED ${TENSORLITE_SOURCE_LIST})
 set_target_properties(tensorlite PROPERTIES POSITION_INDEPENDENT_CODE ON)
 set_target_properties(tensorlite PROPERTIES CUDA_ARCHITECTURES "${CMAKE_CUDA_ARCHITECTURES}")
 target_include_directories(tensorlite
-                           PUBLIC "${CMAKE_SOURCE_DIR}/include"
-                           PUBLIC "${CMAKE_SOURCE_DIR}/3rdparty/FP16/include"
+                           PUBLIC
+                            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+                            $<INSTALL_INTERFACE:include>
+                           PUBLIC
+                            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/FP16/include>
+                            $<INSTALL_INTERFACE:include>
                            PRIVATE "${CMAKE_SOURCE_DIR}/src"
                            PRIVATE "${CURAND_INCLUDE_PATH}")
 target_compile_definitions(tensorlite PRIVATE -DTENSORLITE_EXPORTS)
@@ -103,12 +107,30 @@ endif()
 
 if(INSTALL_TENSORLITE)
   message(STATUS "Install tensorlite to ${CMAKE_INSTALL_PREFIX}")
+
+  # write a version file
+  include(CMakePackageConfigHelpers)
+  write_basic_package_version_file(
+    tensorliteConfigVersion.cmake
+    VERSION ${PACKAGE_VERSION}
+    COMPATIBILITY SameMajorVersion
+  )
+
   install(TARGETS tensorlite
+          EXPORT tensorliteConfig
           LIBRARY DESTINATION lib
           ARCHIVE DESTINATION lib
-          RUNTIME DESTINATION bin)
+          RUNTIME DESTINATION bin
+          INCLUDES DESTINATION include)
   get_target_property(TENSORLITE_INTERFACE_HEADER_DIRS tensorlite INTERFACE_INCLUDE_DIRECTORIES)
   foreach(dir ${TENSORLITE_INTERFACE_HEADER_DIRS})
-    install(DIRECTORY "${dir}/" DESTINATION include FILES_MATCHING PATTERN "*.h")
+    if("${dir}" MATCHES ".*BUILD_INTERFACE.*") # INSTALL_INTERFACE will become empty, then all files will be installed.
+      message(STATUS "Install ${dir}")
+      install(DIRECTORY "${dir}/" TYPE INCLUDE FILES_MATCHING PATTERN "*.h")
+    endif()
   endforeach(dir ${TENSORLITE_INTERFACE_HEADER_DIRS})
+
+  install(EXPORT tensorliteConfig
+          DESTINATION lib/cmake/tensorlite
+          NAMESPACE tl::)
 endif()
