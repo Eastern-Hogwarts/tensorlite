@@ -19,6 +19,7 @@ endif()
 option(BUILD_TEST "whether build test for ths project" OFF)
 option(ENABLE_OPENMP "whether use openmp" ON)
 option(INSTALL_TENSORLITE "whether to install" OFF)
+option(ENABLE_CUDA "whether to enable CUDA" ON) # TODO: make this optional
 
 # use c++17 standard
 set(CMAKE_CXX_STANDARD 17)
@@ -107,6 +108,8 @@ endif()
 
 if(INSTALL_TENSORLITE)
   message(STATUS "Install tensorlite to ${CMAKE_INSTALL_PREFIX}")
+  set(TargetExportName "Tensorlite")
+  include(GNUInstallDirs)
 
   # write a version file
   include(CMakePackageConfigHelpers)
@@ -117,11 +120,11 @@ if(INSTALL_TENSORLITE)
   )
 
   install(TARGETS tensorlite
-          EXPORT tensorliteConfig
-          LIBRARY DESTINATION lib
-          ARCHIVE DESTINATION lib
-          RUNTIME DESTINATION bin
-          INCLUDES DESTINATION include)
+          EXPORT "${TargetExportName}Target"
+          LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+          ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+          RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+          INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
   get_target_property(TENSORLITE_INTERFACE_HEADER_DIRS tensorlite INTERFACE_INCLUDE_DIRECTORIES)
   foreach(dir ${TENSORLITE_INTERFACE_HEADER_DIRS})
     if("${dir}" MATCHES ".*BUILD_INTERFACE.*") # INSTALL_INTERFACE will become empty, then all files will be installed.
@@ -130,7 +133,16 @@ if(INSTALL_TENSORLITE)
     endif()
   endforeach(dir ${TENSORLITE_INTERFACE_HEADER_DIRS})
 
-  install(EXPORT tensorliteConfig
-          DESTINATION lib/cmake/tensorlite
+  install(EXPORT "${TargetExportName}Target"
+          DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/tensorlite"
           NAMESPACE tl::)
+  configure_package_config_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/${TargetExportName}Config.cmake.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/${TargetExportName}Config.cmake"
+    INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/tensorlite"
+  )
+  message(STATUS "CMAKE_INSTALL_LIBDIR: ${CMAKE_INSTALL_LIBDIR}")
+  install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${TargetExportName}Config.cmake"
+                "${CMAKE_CURRENT_BINARY_DIR}/${TargetExportName}ConfigVersion.cmake"
+          DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/tensorlite")
 endif()
