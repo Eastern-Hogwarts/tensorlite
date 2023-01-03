@@ -2,7 +2,10 @@ cmake_minimum_required(VERSION 3.18 FATAL_ERROR)
 
 project(TENSORLITE LANGUAGES CXX VERSION 0.1)
 
-set(CMAKE_CUDA_ARCHITECTURES 75 CACHE STRING "The compute capability id of this cuda arch")
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/tools/get_cuda_arch.cmake")
+get_cuda_arch()
+
+set(CMAKE_CUDA_ARCHITECTURES ${CUDA_DEVICE_CC} CACHE STRING "The compute capability id of this cuda arch")
 
 if(EXISTS ${CMAKE_CURRENT_BINARY_DIR}/config.cmake)
   include(${CMAKE_CURRENT_BINARY_DIR}/config.cmake)
