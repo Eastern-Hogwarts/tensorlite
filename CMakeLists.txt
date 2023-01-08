@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.18 FATAL_ERROR)
 
 project(TENSORLITE LANGUAGES CXX VERSION 0.1)
 
+message(STATUS "Build Tensorlite version: ${CMAKE_PROJECT_VERSION}")
+
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/tools/get_cuda_arch.cmake")
 get_cuda_arch()
 
@@ -23,13 +25,14 @@ option(BUILD_TEST "whether build test for ths project" OFF)
 option(ENABLE_OPENMP "whether use openmp" ON)
 option(INSTALL_TENSORLITE "whether to install" OFF)
 option(ENABLE_CUDA "whether to enable CUDA" ON) # TODO: make this optional
+option(BUILD_PYTHON_API "whether build python API" ON)
 
 # use c++17 standard
 set(CMAKE_CXX_STANDARD 17)
 
 # msvc does not have rpath, we need to put all things into one directory
 # TODO: build libraries in lib directory and copy to bin directory
-if(MSVC)
+if(MSVC AND NOT BUILD_PYTHON_API)
   set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
   set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
   set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
@@ -89,6 +92,19 @@ if (ENABLE_OPENMP)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
   endif ()
 endif ()
+
+if(BUILD_PYTHON_API)
+  message(STATUS "Build Python API")
+  add_subdirectory("${CMAKE_SOURCE_DIR}/3rdparty/pybind11" EXCLUDE_FROM_ALL)
+  pybind11_add_module(pytensorlite MODULE "${CMAKE_SOURCE_DIR}/python/csrc/python_api.cc")
+  target_include_directories(pytensorlite
+                             PUBLIC
+                             "${CMAKE_CURRENT_SOURCE_DIR}/include"
+                             "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/FP16/include")
+  target_link_libraries(pytensorlite PRIVATE tensorlite)
+  add_dependencies(pytensorlite tensorlite)
+  target_compile_definitions(pytensorlite PRIVATE VERSION_INFO=${CMAKE_PROJECT_VERSION})
+endif()
 
 if(BUILD_TEST)
   message(STATUS "Build with unittest")
