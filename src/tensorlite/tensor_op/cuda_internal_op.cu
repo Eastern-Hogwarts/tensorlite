@@ -1,10 +1,10 @@
 #include "tensorlite/tensor_op/cuda_internal_op.cuh"
 
 #include "tensorlite/device.h"
+#include "tensorlite/device/data_transfer.h"
 #include "tensorlite/dtype.h"
 #include "tensorlite/utils/cuda_tools.h"
 #include "tensorlite/utils/logging.h"
-#include "tensorlite/device/data_transfer.h"
 
 namespace tl {
 namespace cuda {
@@ -62,12 +62,16 @@ void CudaUniformDistKernelImpl(Tensor &tensor, Scalar low, Scalar high) {
   auto gen = CUDAThreadLocalHandles::ThreadLocal().curand_gen;
 
   if (num_elem % 2) { // curand host API only accept even number of outputs
-    tl::Tensor even_tensor = Tensor::Empty({num_elem + 1}, tensor.GetDataType(), tensor.GetAlignment(), tensor.GetDevice());
+    tl::Tensor even_tensor =
+        Tensor::Empty({num_elem + 1}, tensor.GetDataType(),
+                      tensor.GetAlignment(), tensor.GetDevice());
     DataTy *even_data = even_tensor.TypedPtr<DataTy>();
     CURAND_CALL(curandGenerateUniform(gen, even_data, num_elem + 1));
 
     // TODO: add stream support
-    DataTransfer<DeviceType::kCUDA, DeviceType::kCUDA>(even_data, data, num_elem * sizeof(DataTy), tensor.GetDevice().GetId(), even_tensor.GetDevice().GetId());
+    DataTransfer<DeviceType::kCUDA, DeviceType::kCUDA>(
+        even_data, data, num_elem * sizeof(DataTy), tensor.GetDevice().GetId(),
+        even_tensor.GetDevice().GetId());
   } else {
     CURAND_CALL(curandGenerateUniform(gen, data, num_elem));
   }
@@ -90,12 +94,16 @@ void CudaUniformDistKernelImpl<double>(Tensor &tensor, Scalar low,
   auto gen = CUDAThreadLocalHandles::ThreadLocal().curand_gen;
 
   if (num_elem % 2) { // curand host API only accept even number of outputs
-    tl::Tensor even_tensor = Tensor::Empty({num_elem + 1}, tensor.GetDataType(), tensor.GetAlignment(), tensor.GetDevice());
+    tl::Tensor even_tensor =
+        Tensor::Empty({num_elem + 1}, tensor.GetDataType(),
+                      tensor.GetAlignment(), tensor.GetDevice());
     double *even_data = even_tensor.TypedPtr<double>();
     CURAND_CALL(curandGenerateUniformDouble(gen, even_data, num_elem + 1));
 
     // TODO: add stream support
-    DataTransfer<DeviceType::kCUDA, DeviceType::kCUDA>(even_data, data, num_elem * sizeof(double), tensor.GetDevice().GetId(), even_tensor.GetDevice().GetId());
+    DataTransfer<DeviceType::kCUDA, DeviceType::kCUDA>(
+        even_data, data, num_elem * sizeof(double), tensor.GetDevice().GetId(),
+        even_tensor.GetDevice().GetId());
   } else {
     CURAND_CALL(curandGenerateUniformDouble(gen, data, num_elem));
   }
@@ -133,16 +141,20 @@ void CudaNormalDistKernelImpl(Tensor &tensor, Scalar mean, Scalar stddev) {
   auto gen = CUDAThreadLocalHandles::ThreadLocal().curand_gen;
 
   if (num_elem % 2) { // curand host API only accept even number of outputs
-    tl::Tensor even_tensor = Tensor::Empty({num_elem + 1}, tensor.GetDataType(), tensor.GetAlignment(), tensor.GetDevice());
+    tl::Tensor even_tensor =
+        Tensor::Empty({num_elem + 1}, tensor.GetDataType(),
+                      tensor.GetAlignment(), tensor.GetDevice());
     DataTy *even_data = even_tensor.TypedPtr<DataTy>();
-    CURAND_CALL(curandGenerateNormal(gen, even_data, num_elem + 1, mean.To<DataTy>(),
-                       stddev.To<DataTy>()));
+    CURAND_CALL(curandGenerateNormal(gen, even_data, num_elem + 1,
+                                     mean.To<DataTy>(), stddev.To<DataTy>()));
 
     // TODO: add stream support
-    DataTransfer<DeviceType::kCUDA, DeviceType::kCUDA>(even_data, data, num_elem * sizeof(DataTy), tensor.GetDevice().GetId(), even_tensor.GetDevice().GetId());
+    DataTransfer<DeviceType::kCUDA, DeviceType::kCUDA>(
+        even_data, data, num_elem * sizeof(DataTy), tensor.GetDevice().GetId(),
+        even_tensor.GetDevice().GetId());
   } else {
     CURAND_CALL(curandGenerateNormal(gen, data, num_elem, mean.To<DataTy>(),
-                       stddev.To<DataTy>()));
+                                     stddev.To<DataTy>()));
   }
 }
 
@@ -154,16 +166,20 @@ void CudaNormalDistKernelImpl<double>(Tensor &tensor, Scalar mean,
   auto gen = CUDAThreadLocalHandles::ThreadLocal().curand_gen;
 
   if (num_elem % 2) { // curand host API only accept even number of outputs
-    tl::Tensor even_tensor = Tensor::Empty({num_elem + 1}, tensor.GetDataType(), tensor.GetAlignment(), tensor.GetDevice());
+    tl::Tensor even_tensor =
+        Tensor::Empty({num_elem + 1}, tensor.GetDataType(),
+                      tensor.GetAlignment(), tensor.GetDevice());
     double *even_data = even_tensor.TypedPtr<double>();
-    CURAND_CALL(curandGenerateNormalDouble(gen, even_data, num_elem + 1, mean.To<double>(),
-                       stddev.To<double>()));
+    CURAND_CALL(curandGenerateNormalDouble(
+        gen, even_data, num_elem + 1, mean.To<double>(), stddev.To<double>()));
 
     // TODO: add stream support
-    DataTransfer<DeviceType::kCUDA, DeviceType::kCUDA>(even_data, data, num_elem * sizeof(double), tensor.GetDevice().GetId(), even_tensor.GetDevice().GetId());
+    DataTransfer<DeviceType::kCUDA, DeviceType::kCUDA>(
+        even_data, data, num_elem * sizeof(double), tensor.GetDevice().GetId(),
+        even_tensor.GetDevice().GetId());
   } else {
-    CURAND_CALL(curandGenerateNormalDouble(gen, data, num_elem, mean.To<double>(),
-                       stddev.To<double>()));
+    CURAND_CALL(curandGenerateNormalDouble(
+        gen, data, num_elem, mean.To<double>(), stddev.To<double>()));
   }
 }
 
