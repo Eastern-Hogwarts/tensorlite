@@ -4,6 +4,7 @@
 #include "tensorlite/dtype.h"
 #include "tensorlite/utils/cuda_tools.h"
 #include "tensorlite/utils/logging.h"
+#include "tensorlite/device/data_transfer.h"
 
 namespace tl {
 namespace cuda {
@@ -59,7 +60,17 @@ void CudaUniformDistKernelImpl(Tensor &tensor, Scalar low, Scalar high) {
   DataTy *data = tensor.TypedPtr<DataTy>();
   size_t num_elem = tensor.GetNumElems();
   auto gen = CUDAThreadLocalHandles::ThreadLocal().curand_gen;
-  curandGenerateUniform(gen, data, num_elem);
+
+  if (num_elem % 2) { // curand host API only accept even number of outputs
+    tl::Tensor even_tensor = Tensor::Empty({num_elem + 1}, tensor.GetDataType(), tensor.GetAlignment(), tensor.GetDevice());
+    DataTy *even_data = even_tensor.TypedPtr<DataTy>();
+    CURAND_CALL(curandGenerateUniform(gen, even_data, num_elem + 1));
+
+    // TODO: add stream support
+    DataTransfer<DeviceType::kCUDA, DeviceType::kCUDA>(even_data, data, num_elem * sizeof(DataTy), tensor.GetDevice().GetId(), even_tensor.GetDevice().GetId());
+  } else {
+    CURAND_CALL(curandGenerateUniform(gen, data, num_elem));
+  }
 
   DataTy scale = high.To<DataTy>() - low.To<DataTy>();
   DataTy bias = low.To<DataTy>();
@@ -77,7 +88,17 @@ void CudaUniformDistKernelImpl<double>(Tensor &tensor, Scalar low,
   double *data = tensor.TypedPtr<double>();
   size_t num_elem = tensor.GetNumElems();
   auto gen = CUDAThreadLocalHandles::ThreadLocal().curand_gen;
-  curandGenerateUniformDouble(gen, data, num_elem);
+
+  if (num_elem % 2) { // curand host API only accept even number of outputs
+    tl::Tensor even_tensor = Tensor::Empty({num_elem + 1}, tensor.GetDataType(), tensor.GetAlignment(), tensor.GetDevice());
+    double *even_data = even_tensor.TypedPtr<double>();
+    CURAND_CALL(curandGenerateUniformDouble(gen, even_data, num_elem + 1));
+
+    // TODO: add stream support
+    DataTransfer<DeviceType::kCUDA, DeviceType::kCUDA>(even_data, data, num_elem * sizeof(double), tensor.GetDevice().GetId(), even_tensor.GetDevice().GetId());
+  } else {
+    CURAND_CALL(curandGenerateUniformDouble(gen, data, num_elem));
+  }
 
   double scale = high.To<double>() - low.To<double>();
   double bias = low.To<double>();
@@ -110,8 +131,19 @@ void CudaNormalDistKernelImpl(Tensor &tensor, Scalar mean, Scalar stddev) {
   DataTy *data = tensor.TypedPtr<DataTy>();
   size_t num_elem = tensor.GetNumElems();
   auto gen = CUDAThreadLocalHandles::ThreadLocal().curand_gen;
-  curandGenerateNormal(gen, data, num_elem, mean.To<DataTy>(),
-                       stddev.To<DataTy>());
+
+  if (num_elem % 2) { // curand host API only accept even number of outputs
+    tl::Tensor even_tensor = Tensor::Empty({num_elem + 1}, tensor.GetDataType(), tensor.GetAlignment(), tensor.GetDevice());
+    DataTy *even_data = even_tensor.TypedPtr<DataTy>();
+    CURAND_CALL(curandGenerateNormal(gen, even_data, num_elem + 1, mean.To<DataTy>(),
+                       stddev.To<DataTy>()));
+
+    // TODO: add stream support
+    DataTransfer<DeviceType::kCUDA, DeviceType::kCUDA>(even_data, data, num_elem * sizeof(DataTy), tensor.GetDevice().GetId(), even_tensor.GetDevice().GetId());
+  } else {
+    CURAND_CALL(curandGenerateNormal(gen, data, num_elem, mean.To<DataTy>(),
+                       stddev.To<DataTy>()));
+  }
 }
 
 template <>
@@ -120,8 +152,19 @@ void CudaNormalDistKernelImpl<double>(Tensor &tensor, Scalar mean,
   double *data = tensor.TypedPtr<double>();
   size_t num_elem = tensor.GetNumElems();
   auto gen = CUDAThreadLocalHandles::ThreadLocal().curand_gen;
-  curandGenerateNormalDouble(gen, data, num_elem, mean.To<double>(),
-                             stddev.To<double>());
+
+  if (num_elem % 2) { // curand host API only accept even number of outputs
+    tl::Tensor even_tensor = Tensor::Empty({num_elem + 1}, tensor.GetDataType(), tensor.GetAlignment(), tensor.GetDevice());
+    double *even_data = even_tensor.TypedPtr<double>();
+    CURAND_CALL(curandGenerateNormalDouble(gen, even_data, num_elem + 1, mean.To<double>(),
+                       stddev.To<double>()));
+
+    // TODO: add stream support
+    DataTransfer<DeviceType::kCUDA, DeviceType::kCUDA>(even_data, data, num_elem * sizeof(double), tensor.GetDevice().GetId(), even_tensor.GetDevice().GetId());
+  } else {
+    CURAND_CALL(curandGenerateNormalDouble(gen, data, num_elem, mean.To<double>(),
+                       stddev.To<double>()));
+  }
 }
 
 void CudaNormalDistKernel(Tensor &tensor, Scalar mean, Scalar stddev) {
