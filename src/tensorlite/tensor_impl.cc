@@ -257,4 +257,63 @@ Tensor Tensor::Normal(TensorShape shape, Scalar mean, Scalar stddev,
   return new_tensor;
 }
 
+constexpr int kNumberWidth = 10;
+
+template <typename DataTy>
+void VectorDisplayImpl(std::ostream &sm, const DataTy *data_ptr, size_t offset,
+                       size_t dim_size) {
+  sm.setf(std::ios::left, std::ios::adjustfield);
+
+  for (auto i = 0; i < dim_size; ++i) {
+    sm.width(kNumberWidth);
+    sm << data_ptr[offset + i] << " ";
+  }
+}
+
+template <typename DataTy>
+void TensorDisplayImpl(std::ostream &sm, const Tensor &tensor,
+                       std::vector<TensorShape::elem_t> &index, size_t curr_dim,
+                       size_t prefix_space_size) {
+  sm << "[";
+  if (curr_dim == (tensor.Rank() - 1)) {
+    VectorDisplayImpl<DataTy>(sm, tensor.TypedPtr<DataTy>(),
+                              tensor.GetShapeWithStride().GlobalOffset(index),
+                              tensor.GetShape(curr_dim));
+    sm << "]";
+    return;
+  } else {
+    size_t curr_dim_size = tensor.GetShape(curr_dim);
+    for (auto i = 0; i < curr_dim_size; ++i) {
+      size_t curr_prefix_space_size = (i == 0) ? 0 : prefix_space_size + 1;
+      sm << std::string(curr_prefix_space_size, ' ');
+      index[curr_dim] = i;
+      TensorDisplayImpl<DataTy>(sm, tensor, index, curr_dim + 1,
+                        prefix_space_size + 1);
+      if (i != curr_dim_size - 1) {
+          sm << ((curr_dim == tensor.Rank() - 2) ? "\n" : "\n\n");
+      }
+    }
+  }
+  index[curr_dim] = 0;
+  sm << "]";
+}
+
+template <typename DataTy>
+void TensorDisplay(std::ostream &sm, const Tensor &tensor) {
+  std::vector<TensorShape::elem_t> index(tensor.Rank(), 0);
+  TensorDisplayImpl<DataTy>(sm, tensor, index, 0, 0);
+  sm << "\n";
+}
+
+void Tensor::Display(std::ostream &sm) const {
+  sm << *this << "\n";
+  Tensor tensor_to_display = *this;
+  if (GetDevice().GetType() != DeviceType::kCPU) {
+    tensor_to_display = tensor_to_display.Transfer(Device::DefaultDevice());
+  }
+
+  DTYPE_SWITCH(this->dtype_.GetTag(),
+               [&]() { TensorDisplay<scalar_t>(sm, tensor_to_display); });
+}
+
 } // namespace tl

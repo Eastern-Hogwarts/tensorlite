@@ -70,15 +70,26 @@ list(APPEND TENSORLITE_SOURCE_LIST ${TENSORLITE_CU_LIST})
 add_library(tensorlite SHARED ${TENSORLITE_SOURCE_LIST})
 set_target_properties(tensorlite PROPERTIES POSITION_INDEPENDENT_CODE ON)
 set_target_properties(tensorlite PROPERTIES CUDA_ARCHITECTURES "${CMAKE_CUDA_ARCHITECTURES}")
-target_include_directories(tensorlite
-                           PUBLIC
-                            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-                            $<INSTALL_INTERFACE:include>
-                           PUBLIC
-                            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/FP16/include>
-                            $<INSTALL_INTERFACE:include>
-                           PRIVATE "${CMAKE_SOURCE_DIR}/src"
-                           PRIVATE "${CURAND_INCLUDE_PATH}")
+
+# just for vscode's shitty include path management
+if(INSTALL_TENSORLITE)
+  target_include_directories(tensorlite
+                            PUBLIC
+                              $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+                              $<INSTALL_INTERFACE:include>
+                            PUBLIC
+                              $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/FP16/include>
+                              $<INSTALL_INTERFACE:include>
+                            PRIVATE "${CMAKE_SOURCE_DIR}/src"
+                            PRIVATE "${CURAND_INCLUDE_PATH}")
+else()
+  target_include_directories(tensorlite
+                             PUBLIC "${CMAKE_SOURCE_DIR}/include"
+                             PUBLIC "${CMAKE_SOURCE_DIR}/3rdparty/FP16/include"
+                             PRIVATE "${CMAKE_SOURCE_DIR}/src"
+                             PRIVATE "${CURAND_INCLUDE_PATH}")
+endif()
+
 target_compile_definitions(tensorlite PRIVATE -DTENSORLITE_EXPORTS)
 target_compile_features(tensorlite PUBLIC cxx_std_17)
 target_link_libraries(tensorlite CUDART ${CURAND_LIBRARY})

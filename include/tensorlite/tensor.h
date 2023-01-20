@@ -11,6 +11,7 @@
 #include <type_traits>
 #include <unordered_set>
 #include <vector>
+#include <iostream>
 
 #include "tensorlite/buffer.h"
 #include "tensorlite/device.h"
@@ -309,6 +310,22 @@ public:
     return true;
   }
 
+  /*!
+   * \brief Output the tensor shape to a ostream
+   *
+   * \param sm The ostream
+   * \param shape The tensor shape
+   * \return std::ostream&
+   */
+  friend std::ostream &operator<<(std::ostream &sm, const TensorShape &shape) {
+    sm << "[";
+    for (size_t i = 0; i < shape.rank_; ++i) {
+      sm << shape.shape_[i] << ", ";
+    }
+    sm << "]";
+    return sm;
+  }
+
 protected:
   // this could have negative elements
   std::array<elem_t, kMaxTensorRank> shape_;
@@ -472,6 +489,24 @@ public:
     for (auto i = 0; i < rank_; ++i) {
       stride_[i] = stride_copy[perm[i]];
     }
+  }
+
+  /*!
+   * \brief Return the global offset of an index vector.
+   *
+   * \tparam IndexTy The index data type
+   * \param index The index vector.
+   * \return std::enable_if_t<std::is_integral_v<IndexTy>, size_t>
+   */
+  template <typename IndexTy>
+  std::enable_if_t<std::is_integral_v<IndexTy>, size_t>
+  GlobalOffset(const std::vector<IndexTy> &index) const {
+    size_t g_offset = 0;
+    assert(index.size() >= this->rank_);
+    for (auto i = 0; i < this->rank_; ++i) {
+      g_offset += static_cast<size_t>(index[i] * this->stride_[i]);
+    }
+    return g_offset;
   }
 
   /**
@@ -700,6 +735,27 @@ public:
    * \return const TensorShapeWithStride&
    */
   const TensorShapeWithStride &GetShapeWithStride() const { return shape_; }
+
+  /*!
+   * \brief Output tensor information to the ostream.
+   *
+   * \param sm the ostream.
+   * \param tensor the tensor.
+   * \return std::ostream&
+   */
+  friend std::ostream &operator<<(std::ostream &sm, const Tensor &tensor) {
+    sm << "Tensor[shape:" << tensor.GetShape()
+       << ", dtype: " << tensor.GetDataType()
+       << ", device: " << tensor.GetDevice() << "]";
+    return sm;
+  }
+
+  /*!
+   * \brief Dump the tensor to a stream object.
+   *
+   * \param sm the stream object
+   */
+  TENSORLITE_DLL void Display(std::ostream &sm = std::cout) const;
 
   /**
    * \brief Create an empty tensor with given shape, dtype, alignment and
