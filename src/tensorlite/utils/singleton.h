@@ -10,7 +10,7 @@ namespace tl {
  */
 template <typename Derived> class ThreadLocalSingleton {
 public:
-  static Derived &Get() {
+  static Derived &GetSingleton() {
     thread_local Derived obj;
     return obj;
   }
@@ -21,9 +21,9 @@ public:
  *
  * \tparam Derived The actual singleton type.
  */
-template <typename Derived> class GlobalLocalSingleton {
+template <typename Derived> class GlobalSingleton {
 public:
-  static Derived &Get() {
+  static Derived &GetSingleton() {
     static Derived obj;
     return obj;
   }

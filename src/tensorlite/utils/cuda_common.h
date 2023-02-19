@@ -83,7 +83,7 @@ struct CUDAThreadLocalHandles {
   }
 
   static CUDAThreadLocalHandles &ThreadLocal() {
-    return ThreadLocalSingleton<CUDAThreadLocalHandles>::Get();
+    return ThreadLocalSingleton<CUDAThreadLocalHandles>::GetSingleton();
   }
 };
 

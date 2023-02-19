@@ -88,7 +88,7 @@ public:
   }
 
   static RandomEngine &ThreadLocal() {
-    return ThreadLocalSingleton<RandomEngine>::Get();
+    return ThreadLocalSingleton<RandomEngine>::GetSingleton();
   }
 
 private:
