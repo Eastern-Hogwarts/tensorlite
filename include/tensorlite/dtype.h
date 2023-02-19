@@ -448,6 +448,11 @@ public:
         val_));
   }
 
+  friend std::ostream &operator<<(std::ostream &sm, const Scalar &scalar) {
+    std::visit([&](auto &&arg) { sm << arg; }, scalar.val_);
+    return sm;
+  }
+
 #define DEFINE_CAST(type)                                                      \
   operator type() const { return To<type>(); }
 

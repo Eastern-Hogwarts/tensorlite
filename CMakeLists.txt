@@ -2,7 +2,12 @@ cmake_minimum_required(VERSION 3.18 FATAL_ERROR)
 
 project(TENSORLITE LANGUAGES CXX VERSION 0.1)
 
-set(CMAKE_CUDA_ARCHITECTURES 75 CACHE STRING "The compute capability id of this cuda arch")
+message(STATUS "Build Tensorlite version: ${CMAKE_PROJECT_VERSION}")
+
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/tools/get_cuda_arch.cmake")
+get_cuda_arch()
+
+set(CMAKE_CUDA_ARCHITECTURES ${CUDA_DEVICE_CC} CACHE STRING "The compute capability id of this cuda arch")
 
 if(EXISTS ${CMAKE_CURRENT_BINARY_DIR}/config.cmake)
   include(${CMAKE_CURRENT_BINARY_DIR}/config.cmake)
@@ -20,13 +25,14 @@ option(BUILD_TEST "whether build test for ths project" OFF)
 option(ENABLE_OPENMP "whether use openmp" ON)
 option(INSTALL_TENSORLITE "whether to install" OFF)
 option(ENABLE_CUDA "whether to enable CUDA" ON) # TODO: make this optional
+option(BUILD_PYTHON_API "whether build python API" ON)
 
 # use c++17 standard
 set(CMAKE_CXX_STANDARD 17)
 
 # msvc does not have rpath, we need to put all things into one directory
 # TODO: build libraries in lib directory and copy to bin directory
-if(MSVC)
+if(MSVC AND NOT BUILD_PYTHON_API)
   set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
   set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
   set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
@@ -64,15 +70,26 @@ list(APPEND TENSORLITE_SOURCE_LIST ${TENSORLITE_CU_LIST})
 add_library(tensorlite SHARED ${TENSORLITE_SOURCE_LIST})
 set_target_properties(tensorlite PROPERTIES POSITION_INDEPENDENT_CODE ON)
 set_target_properties(tensorlite PROPERTIES CUDA_ARCHITECTURES "${CMAKE_CUDA_ARCHITECTURES}")
-target_include_directories(tensorlite
-                           PUBLIC
-                            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-                            $<INSTALL_INTERFACE:include>
-                           PUBLIC
-                            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/FP16/include>
-                            $<INSTALL_INTERFACE:include>
-                           PRIVATE "${CMAKE_SOURCE_DIR}/src"
-                           PRIVATE "${CURAND_INCLUDE_PATH}")
+
+# just for vscode's shitty include path management
+if(INSTALL_TENSORLITE)
+  target_include_directories(tensorlite
+                            PUBLIC
+                              $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+                              $<INSTALL_INTERFACE:include>
+                            PUBLIC
+                              $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/FP16/include>
+                              $<INSTALL_INTERFACE:include>
+                            PRIVATE "${CMAKE_SOURCE_DIR}/src"
+                            PRIVATE "${CURAND_INCLUDE_PATH}")
+else()
+  target_include_directories(tensorlite
+                             PUBLIC "${CMAKE_SOURCE_DIR}/include"
+                             PUBLIC "${CMAKE_SOURCE_DIR}/3rdparty/FP16/include"
+                             PRIVATE "${CMAKE_SOURCE_DIR}/src"
+                             PRIVATE "${CURAND_INCLUDE_PATH}")
+endif()
+
 target_compile_definitions(tensorlite PRIVATE -DTENSORLITE_EXPORTS)
 target_compile_features(tensorlite PUBLIC cxx_std_17)
 target_link_libraries(tensorlite CUDART ${CURAND_LIBRARY})
@@ -86,6 +103,19 @@ if (ENABLE_OPENMP)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
   endif ()
 endif ()
+
+if(BUILD_PYTHON_API)
+  message(STATUS "Build Python API")
+  add_subdirectory("${CMAKE_SOURCE_DIR}/3rdparty/pybind11" EXCLUDE_FROM_ALL)
+  pybind11_add_module(pytensorlite MODULE "${CMAKE_SOURCE_DIR}/python/csrc/python_api.cc")
+  target_include_directories(pytensorlite
+                             PUBLIC
+                             "${CMAKE_CURRENT_SOURCE_DIR}/include"
+                             "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/FP16/include")
+  target_link_libraries(pytensorlite PRIVATE tensorlite)
+  add_dependencies(pytensorlite tensorlite)
+  target_compile_definitions(pytensorlite PRIVATE VERSION_INFO=${CMAKE_PROJECT_VERSION})
+endif()
 
 if(BUILD_TEST)
   message(STATUS "Build with unittest")

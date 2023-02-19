@@ -138,3 +138,10 @@ TEST(TestCudaTensor, TestCudaTensorCast) {
     EXPECT_EQ(t1_ptr[i], static_cast<double>(t2_ptr[i]));
   }
 }
+
+TEST(TestCudaTensor, TestCudaTensorDisplay) {
+  std::vector<tl::shape_elem_t> shape{2, 3, 4, 5};
+  tl::Tensor t1 = tl::Tensor::Uniform(shape, 0, 1, tl::DataType("double"),
+                                      tl::Device::CudaDevice(0));
+  t1.Display();
+}

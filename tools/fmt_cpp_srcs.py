@@ -3,7 +3,7 @@ import argparse
 from subprocess import Popen, PIPE, TimeoutExpired
 
 _EXTS = set([".cc", ".cu", ".h", ".cuh", ".c", ".cpp"])
-_SRC_DIRS = ["./include", "./src", "./tests"]
+_SRC_DIRS = ["./include", "./src", "./tests", "./python"]
 
 def fmt_directory(dir: str) -> None:
     if not os.path.exists(dir):
