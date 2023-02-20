@@ -4,6 +4,7 @@
 #include <array>
 #include <cassert>
 #include <initializer_list>
+#include <iostream>
 #include <limits>
 #include <memory>
 #include <numeric>
@@ -11,7 +12,6 @@
 #include <type_traits>
 #include <unordered_set>
 #include <vector>
-#include <iostream>
 
 #include "tensorlite/buffer.h"
 #include "tensorlite/device.h"
@@ -324,6 +324,50 @@ public:
     }
     sm << "]";
     return sm;
+  }
+
+  /**
+   * \brief Return the broadcasted shape of given shapes. If it cannot be broadcasted, return nullopt.
+   *
+   * \param shapes A vector whose elements are input shapes
+   * \return std::optional<TensorShape>
+   */
+  static std::optional<TensorShape> BroadcastShapeVector(const std::vector<TensorShape>& shapes) {
+    size_t broadcast_rank = 0;
+    for (const auto& shape : shapes) {
+      broadcast_rank = std::max(shape.Rank(), broadcast_rank);
+    }
+
+    std::vector<elem_t> broadcast_shape(broadcast_rank, elem_t(1));
+
+    for (const auto& shape : shapes) {
+      auto offset = broadcast_rank - shape.Rank();
+
+      // move shape elements to make them align at the least
+      for (auto i = offset; i < broadcast_rank; ++i) {
+        if (broadcast_shape[i] == 1) {
+          broadcast_shape[i] = shape[i - offset];
+        } else if (broadcast_shape[i] != shape[i - offset] && shape[i - offset] != 1) {
+          return std::nullopt;
+        }
+      }
+    }
+
+    return TensorShape(broadcast_shape);
+  }
+
+  /**
+   * \brief Return the broadcasted shape of given shapes. If it cannot be broadcasted, return nullopt.
+   *
+   * \tparam ShapeTy Type of shapes.
+   * \param shapes Input shapes.
+   * \return std::optional<TensorShape>
+   */
+  template <typename ...ShapeTy>
+  static std::optional<TensorShape> BroadcastShape(ShapeTy&&... shapes) {
+    return TensorShape::BroadcastShapeVector(std::vector<TensorShape>{
+      TensorShape(std::forward<ShapeTy>(shapes))...
+    });
   }
 
 protected:
