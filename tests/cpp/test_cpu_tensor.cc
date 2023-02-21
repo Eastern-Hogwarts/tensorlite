@@ -1,4 +1,5 @@
 #include "tensorlite/tensor.h"
+#include "tensorlite/tensor_ops.h"
 #include "gtest/gtest.h"
 
 TEST(TestCpuTensor, TestCpuTensorEmpty) {
@@ -141,5 +142,17 @@ TEST(TestCpuTensor, TestCpuTensorCast) {
   auto *t2_ptr = t2.TypedPtr<float>();
   for (auto i = 0; i < t1.GetNumElems(); ++i) {
     EXPECT_EQ(t1_ptr[i], static_cast<double>(t2_ptr[i]));
+  }
+}
+
+TEST(TestCpuTensor, TestCpuTensorAdd) {
+  tl::Tensor t1 = tl::Tensor::Ones({3, 4}, tl::DataType("double"));
+  tl::Tensor t2 = tl::Tensor::Zeros({4}, tl::DataType("double"));
+  auto t3 = tl::Add(t1, t2);
+
+  EXPECT_EQ(t3.GetNumElems(), 12);
+  auto *ptr = t3.TypedPtr<double>();
+  for (auto i = 0; i < t3.GetNumElems(); ++i) {
+    EXPECT_EQ(ptr[i], 1.);
   }
 }

@@ -288,9 +288,9 @@ void TensorDisplayImpl(std::ostream &sm, const Tensor &tensor,
       sm << std::string(curr_prefix_space_size, ' ');
       index[curr_dim] = i;
       TensorDisplayImpl<DataTy>(sm, tensor, index, curr_dim + 1,
-                        prefix_space_size + 1);
+                                prefix_space_size + 1);
       if (i != curr_dim_size - 1) {
-          sm << ((curr_dim == tensor.Rank() - 2) ? "\n" : "\n\n");
+        sm << ((curr_dim == tensor.Rank() - 2) ? "\n" : "\n\n");
       }
     }
   }

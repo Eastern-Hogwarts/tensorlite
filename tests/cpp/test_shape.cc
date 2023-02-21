@@ -7,7 +7,8 @@ TEST(TestTensorShape, TestBroadcast) {
   auto shape2 = TensorShape({1, 5});
   auto shape3 = std::vector<size_t>{4, 1};
 
-  auto broadcast_shape_opt = TensorShape::BroadcastShape(shape1, shape2, shape3);
+  auto broadcast_shape_opt =
+      TensorShape::BroadcastShape(shape1, shape2, shape3);
   EXPECT_TRUE(broadcast_shape_opt.has_value());
   auto broadcast_shape = broadcast_shape_opt.value();
   for (auto i = 0; i < broadcast_shape.Rank(); ++i) {
