@@ -34,7 +34,7 @@ public:
 
 private:
   class OperatorHandleImpl;
-  std::unique_ptr<OperatorHandleImpl> impl_ = nullptr;
+  std::unique_ptr<OperatorHandleImpl> impl_;
 };
 
 /** TODO: docstring here
