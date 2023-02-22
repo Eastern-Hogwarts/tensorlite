@@ -45,6 +45,7 @@ void TensorIterator::BroadcastShape() {
   for (auto &tensor : operands_) {
     auto offset = max_rank - tensor.Rank();
     auto &tensor_shape = tensor.GetShapeWithStride();
+    tensor_shape.ResetRank(max_rank);
 
     // move shape elements to make them align at the least
     // significant axis
@@ -84,8 +85,9 @@ bool TensorIterator::CanCompress(int dim0, int dim1) const {
 
   for (const auto &tensor : operands_) {
     const auto &shape = tensor.GetShapeWithStride();
-    if (shape.Stride(dim0) != (shape.Shape(dim1) * shape.Stride(dim1)) &&
-        shape.Stride(dim1) * shape.Stride(dim0) != 0) {
+    if (shape.Stride(dim1) * shape.Stride(dim0) == 0) { // broadcast case
+      return false;
+    } else if (shape.Stride(dim0) != (shape.Shape(dim1) * shape.Stride(dim1))) {
       return false;
     }
   }

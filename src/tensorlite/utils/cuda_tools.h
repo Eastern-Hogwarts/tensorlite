@@ -7,6 +7,7 @@
 #include "tensorlite/tensor.h"
 #include "tensorlite/tensor_op/tensor_iterator.h"
 #include "tensorlite/utils/function_traits.h"
+#include "tensorlite/utils/cuda_common.h"
 #include <cuda_fp16.h>
 #include <type_traits>
 #include <utility>
@@ -88,17 +89,9 @@ template <typename ShapeElemType, size_t NARGS> struct OffsetCalculator {
   static constexpr size_t kMaxTensorRank = ::tl::TensorShape::kMaxTensorRank;
 
   OffsetCalculator(size_t num_axes, const std::vector<ShapeElemType> &shape,
-                   const std::vector<size_t> &strides,
-                   const std::array<size_t, NARGS> &elem_size)
+                   const std::vector<size_t> &strides)
       : num_axes_(num_axes) {
     CHECK_LE(num_axes, kMaxTensorRank);
-
-#ifndef _MSC_VER
-#pragma unroll
-#endif
-    for (size_t t = 0; t < NARGS; ++t) {
-      elem_size_[t] = elem_size[t];
-    }
 
     for (size_t i = 0; i < num_axes; ++i) {
       shape_[i] = shape[i];
@@ -128,7 +121,7 @@ template <typename ShapeElemType, size_t NARGS> struct OffsetCalculator {
 #pragma unroll
 #endif
       for (size_t t = 0; t < NARGS; ++t) {
-        offset[t] += mod * strides_[d][t] * elem_size_[t];
+        offset[t] += mod * strides_[d][t];
       }
     }
   }
@@ -138,7 +131,6 @@ template <typename ShapeElemType, size_t NARGS> struct OffsetCalculator {
                                         // in libcu++
   size_t strides_[kMaxTensorRank]
                  [std::max<ShapeElemType>(NARGS, ShapeElemType(1))];
-  size_t elem_size_[std::max<size_t>(NARGS, size_t(1))];
 };
 
 template <size_t nt, size_t vt, typename func_t>
@@ -263,23 +255,21 @@ CudaElemwiseKernel(TensorIterator &iter, Op &&op) {
 
   constexpr size_t num_tensors = traits::rank;
   std::array<char *, num_tensors> base_ptrs;
-  std::array<size_t, num_tensors> elem_sizes;
 #ifndef _MSC_VER
 #pragma unroll
 #endif
   for (size_t t = 0; t < num_tensors; ++t) {
     base_ptrs[t] = reinterpret_cast<char *>(iter.Tensors()[t].RawPtr());
-    elem_sizes[t] = iter.Tensors()[t].GetDataType().Size();
   }
   constexpr size_t unroll = sizeof(arg0_t) >= 4 ? 2 : 4;
 
   OffsetCalculator<shape_elem_t, num_tensors> offset_calc(
-      iter.Rank(), iter.Shape(), iter.GetStridesInBytes(), elem_sizes);
+      iter.Rank(), iter.Shape(), iter.GetStridesInBytes());
 
   cudaElemwiseKernelImpl<128, unroll>(
       iter.NumElem(), [=] CUDA_LAMBDA(size_t idx) {
         size_t offset[traits::rank];
-        offset_calc.get(idx, offset);
+        offset_calc.get(idx, &offset[0]);
         invoke(op, &base_ptrs[0], &offset[0], 1);
       });
 }
@@ -304,23 +294,26 @@ CudaElemwiseKernel(TensorIterator &iter, Op &&op) {
 
   constexpr size_t num_tensors = traits::rank;
   std::array<char *, num_tensors> base_ptrs;
-  std::array<size_t, num_tensors> elem_sizes;
 #ifndef _MSC_VER
 #pragma unroll
 #endif
   for (size_t t = 0; t < num_tensors; ++t) {
     base_ptrs[t] = reinterpret_cast<char *>(iter.Tensors()[t].RawPtr());
-    elem_sizes[t] = iter.Tensors()[t].GetDataType().Size();
   }
   constexpr size_t unroll = sizeof(arg0_t) >= 4 ? 2 : 4;
 
   OffsetCalculator<shape_elem_t, num_tensors> offset_calc(
-      iter.Rank(), iter.Shape(), iter.GetStridesInBytes(), elem_sizes);
+      iter.Rank(), iter.Shape(), iter.GetStridesInBytes());
 
   cudaElemwiseKernelImpl<128, unroll>(
       iter.NumElem(), [=] CUDA_LAMBDA(size_t idx) {
         size_t offset[traits::rank];
-        offset_calc.get(idx, offset);
+        offset_calc.get(idx, &offset[0]);
+
+        for (int i = 1; i < traits::rank; ++i) {
+          printf("idx: %d, offset %d: %d\n", (int)idx, (int)i, (int)offset[i]);
+        }
+
         arg0_t *out = (arg0_t *)(base_ptrs[0] + offset[0]);
         *out = invoke(op, &base_ptrs[1], &offset[1], 1);
       });
