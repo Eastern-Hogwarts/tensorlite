@@ -67,7 +67,8 @@ void DeviceDispatcher::Register(const std::string &name, DeviceType key,
   impl_->Register(name, key, func_ptr);
 }
 
-const void* DeviceDispatcher::GetKernel(const std::string& name, DeviceType key) const {
+const void *DeviceDispatcher::GetKernel(const std::string &name,
+                                        DeviceType key) const {
   return impl_->GetKernel(name, key);
 }
 

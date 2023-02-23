@@ -6,8 +6,8 @@
 #include <type_traits>
 
 #include "tensorlite/device.h"
-#include "tensorlite/utils/singleton.h"
 #include "tensorlite/utils/logging.h"
+#include "tensorlite/utils/singleton.h"
 
 namespace tl {
 
@@ -55,7 +55,7 @@ public:
   bool HasDefinition(const std::string &name, DeviceType key);
   void Register(const std::string &name, DeviceType key, void *func_ptr);
 
-  const void* GetKernel(const std::string &name, DeviceType key) const;
+  const void *GetKernel(const std::string &name, DeviceType key) const;
 
 private:
   class DeviceDispatcherImpl;
@@ -66,10 +66,10 @@ template <typename Return, typename... Args>
 std::enable_if_t<std::is_void_v<Return>, void>
 DeviceDispatchCall(const std::string &name, DeviceType key, Args... args) {
   using TypedFnPtr = Return (*)(Args...);
-  const void *raw_fn_ptr = DeviceDispatcher::GetSingleton().GetKernel(name, key);
-  CHECK_NE(raw_fn_ptr, nullptr)
-      << "Cannot find definition of operator " << name << " on device "
-      << DeviceTypeName(key);
+  const void *raw_fn_ptr =
+      DeviceDispatcher::GetSingleton().GetKernel(name, key);
+  CHECK_NE(raw_fn_ptr, nullptr) << "Cannot find definition of operator " << name
+                                << " on device " << DeviceTypeName(key);
   TypedFnPtr fn = reinterpret_cast<TypedFnPtr>(raw_fn_ptr);
   fn(std::forward<Args>(args)...);
 }
@@ -78,10 +78,10 @@ template <typename Return, typename... Args>
 std::enable_if_t<!std::is_void_v<Return>, Return>
 DeviceDispatchCall(const std::string &name, DeviceType key, Args... args) {
   using TypedFnPtr = Return (*)(Args...);
-  const void *raw_fn_ptr = DeviceDispatcher::GetSingleton().GetKernel(name, key);
-  CHECK_NE(raw_fn_ptr, nullptr)
-      << "Cannot find definition of operator " << name << " on device "
-      << DeviceTypeName(key);
+  const void *raw_fn_ptr =
+      DeviceDispatcher::GetSingleton().GetKernel(name, key);
+  CHECK_NE(raw_fn_ptr, nullptr) << "Cannot find definition of operator " << name
+                                << " on device " << DeviceTypeName(key);
   TypedFnPtr fn = reinterpret_cast<TypedFnPtr>(raw_fn_ptr);
   return fn(std::forward<Args>(args)...);
 }

@@ -1,4 +1,5 @@
 #include "tensorlite/tensor.h"
+#include "tensorlite/tensor_ops.h"
 #include "gtest/gtest.h"
 
 TEST(TestCudaTensor, TestCudaTensorEmpty) {
@@ -144,4 +145,18 @@ TEST(TestCudaTensor, TestCudaTensorDisplay) {
   tl::Tensor t1 = tl::Tensor::Uniform(shape, 0, 1, tl::DataType("double"),
                                       tl::Device::CudaDevice(0));
   t1.Display();
+}
+
+TEST(TestCudaTensor, TestCudaTensorAdd) {
+  tl::Tensor t1 = tl::Tensor::Ones({3, 4}, tl::DataType("double"),
+                                   tl::Device::CudaDevice(0));
+  tl::Tensor t2 =
+      tl::Tensor::Zeros({4}, tl::DataType("double"), tl::Device::CudaDevice(0));
+  auto t3 = tl::native_ops::Add(t1, t2).Transfer(tl::Device::DefaultDevice());
+
+  EXPECT_EQ(t3.GetNumElems(), 12);
+  auto *ptr = t3.TypedPtr<double>();
+  for (auto i = 0; i < t3.GetNumElems(); ++i) {
+    EXPECT_EQ(ptr[i], 1.);
+  }
 }

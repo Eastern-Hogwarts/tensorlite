@@ -5,35 +5,41 @@
 #ifndef TENSORLITE_FP16_H_
 #define TENSORLITE_FP16_H_
 
-#include "fp16.h"
+#include <cstdint>
+
+#if defined(__CUDACC__)
+#include <cuda_fp16.h>
+#endif
+
+#include "tensorlite/macros.h"
 
 namespace tl {
 
-struct Float16 {
+struct alignas(2) Float16 {
   uint16_t bits;
 
-  Float16() = default;
-  Float16(float f) : bits(fp16_ieee_from_fp32_value(f)) {}
-  operator float() const { return fp16_ieee_to_fp32_value(bits); }
+  inline Float16() = default;
+  inline TENSOR_HOST_DEVICE Float16(float f);
 
-#define DEFINE_BINARY_OP(op)                                                   \
-  Float16 operator op(Float16 other) const {                                   \
-    return static_cast<float>(*this) op static_cast<float>(other);             \
-  }
+  // useless: to avoid more than one ctor ...
+  constexpr explicit Float16(uint16_t bits, int useless) : bits(bits) {}
 
-  DEFINE_BINARY_OP(+)
-  DEFINE_BINARY_OP(-)
-  DEFINE_BINARY_OP(*)
-  DEFINE_BINARY_OP(/)
+#if defined(__CUDACC__)
+  inline TENSOR_HOST_DEVICE Float16(const __half& nv_half);
+  inline TENSOR_HOST_DEVICE operator __half() const;
+#endif
 
-  static Float16 FromHex(uint16_t b) {
-    Float16 h;
-    h.bits = b;
-    return h;
+  inline TENSOR_HOST_DEVICE operator float() const;
+
+  constexpr static Float16 FromHex(uint16_t b) {
+    return Float16(b, 0);
   }
 };
 
 using fp16_t = Float16;
 
 } // namespace tl
+
+
+#include "tensorlite/float16_impl.h"
 #endif // TENSORLITE_FP16_H_

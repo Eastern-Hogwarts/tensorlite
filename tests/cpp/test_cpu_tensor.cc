@@ -148,7 +148,7 @@ TEST(TestCpuTensor, TestCpuTensorCast) {
 TEST(TestCpuTensor, TestCpuTensorAdd) {
   tl::Tensor t1 = tl::Tensor::Ones({3, 4}, tl::DataType("double"));
   tl::Tensor t2 = tl::Tensor::Zeros({4}, tl::DataType("double"));
-  auto t3 = tl::Add(t1, t2);
+  auto t3 = tl::native_ops::Add(t1, t2);
 
   EXPECT_EQ(t3.GetNumElems(), 12);
   auto *ptr = t3.TypedPtr<double>();

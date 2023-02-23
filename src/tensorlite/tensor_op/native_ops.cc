@@ -1,0 +1,30 @@
+#include "tensorlite/dispatch/device_dispatch.h"
+#include "tensorlite/tensor_ops.h"
+#include "tensorlite/utils/logging.h"
+
+namespace tl {
+namespace native_ops {
+
+OP_DEF(Native_Add);
+Tensor Add(const Tensor &t1, const Tensor &t2) {
+  return DeviceDispatchCall<Tensor, Tensor, Tensor>(
+      "Native_Add", t1.GetDevice().GetType(), t1, t2);
+}
+OP_DEF(Native_Sub);
+Tensor Sub(const Tensor &t1, const Tensor &t2) {
+  return DeviceDispatchCall<Tensor, Tensor, Tensor>(
+      "Native_Sub", t1.GetDevice().GetType(), t1, t2);
+}
+OP_DEF(Native_Mul);
+Tensor Mul(const Tensor &t1, const Tensor &t2) {
+  return DeviceDispatchCall<Tensor, Tensor, Tensor>(
+      "Native_Mul", t1.GetDevice().GetType(), t1, t2);
+}
+OP_DEF(Native_Div);
+Tensor Div(const Tensor &t1, const Tensor &t2) {
+  return DeviceDispatchCall<Tensor, Tensor, Tensor>(
+      "Native_Div", t1.GetDevice().GetType(), t1, t2);
+}
+
+} // namespace native_ops
+} // namespace tl

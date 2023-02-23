@@ -70,6 +70,10 @@ list(APPEND TENSORLITE_SOURCE_LIST ${TENSORLITE_CU_LIST})
 add_library(tensorlite SHARED ${TENSORLITE_SOURCE_LIST})
 set_target_properties(tensorlite PROPERTIES POSITION_INDEPENDENT_CODE ON)
 set_target_properties(tensorlite PROPERTIES CUDA_ARCHITECTURES "${CMAKE_CUDA_ARCHITECTURES}")
+if(ENABLE_CUDA)
+  target_compile_definitions(tensorlite PRIVATE -DENABLE_CUDA)
+  message(STATUS "Build with CUDA")
+endif()
 
 # just for vscode's shitty include path management
 if(INSTALL_TENSORLITE)

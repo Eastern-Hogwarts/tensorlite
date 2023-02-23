@@ -6,8 +6,8 @@
 #include "tensorlite/macros.h"
 #include "tensorlite/tensor.h"
 #include "tensorlite/tensor_op/tensor_iterator.h"
-#include "tensorlite/utils/function_traits.h"
 #include "tensorlite/utils/cuda_common.h"
+#include "tensorlite/utils/function_traits.h"
 #include <cuda_fp16.h>
 #include <type_traits>
 #include <utility>
@@ -187,6 +187,7 @@ CudaContiguousKernel(TensorIterator &iter, Op &&op) {
   }
 
   constexpr size_t unroll = sizeof(arg0_t) >= 4 ? 2 : 4;
+
   cudaElemwiseKernelImpl<128, unroll>(
       iter.NumElem(), [=] CUDA_LAMBDA(size_t idx) {
         size_t offset[traits::rank];
@@ -309,11 +310,6 @@ CudaElemwiseKernel(TensorIterator &iter, Op &&op) {
       iter.NumElem(), [=] CUDA_LAMBDA(size_t idx) {
         size_t offset[traits::rank];
         offset_calc.get(idx, &offset[0]);
-
-        for (int i = 1; i < traits::rank; ++i) {
-          printf("idx: %d, offset %d: %d\n", (int)idx, (int)i, (int)offset[i]);
-        }
-
         arg0_t *out = (arg0_t *)(base_ptrs[0] + offset[0]);
         *out = invoke(op, &base_ptrs[1], &offset[1], 1);
       });

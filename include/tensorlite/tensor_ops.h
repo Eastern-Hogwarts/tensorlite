@@ -1,10 +1,11 @@
 #ifndef TENSORLITE_TENSOR_OPS_H_
 #define TENSORLITE_TENSOR_OPS_H_
 
-#include "tensorlite/tensor.h"
 #include "tensorlite/macros.h"
+#include "tensorlite/tensor.h"
 
 namespace tl {
+namespace native_ops {
 
 /**
  * \brief Perform elementwise addition
@@ -21,6 +22,7 @@ TENSORLITE_DLL Tensor Mul(const Tensor &t1, const Tensor &t2);
 
 TENSORLITE_DLL Tensor Div(const Tensor &t1, const Tensor &t2);
 
+} // namespace native_ops
 } // namespace tl
 
 #endif // TENSORLITE_TENSOR_OPS_H_
