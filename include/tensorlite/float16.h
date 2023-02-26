@@ -25,21 +25,18 @@ struct alignas(2) Float16 {
   constexpr explicit Float16(uint16_t bits, int useless) : bits(bits) {}
 
 #if defined(__CUDACC__)
-  inline TENSOR_HOST_DEVICE Float16(const __half& nv_half);
+  inline TENSOR_HOST_DEVICE Float16(const __half &nv_half);
   inline TENSOR_HOST_DEVICE operator __half() const;
 #endif
 
   inline TENSOR_HOST_DEVICE operator float() const;
 
-  constexpr static Float16 FromHex(uint16_t b) {
-    return Float16(b, 0);
-  }
+  constexpr static Float16 FromHex(uint16_t b) { return Float16(b, 0); }
 };
 
 using fp16_t = Float16;
 
 } // namespace tl
-
 
 #include "tensorlite/float16_impl.h"
 #endif // TENSORLITE_FP16_H_

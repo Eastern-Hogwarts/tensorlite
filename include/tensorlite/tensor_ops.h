@@ -22,6 +22,8 @@ TENSORLITE_DLL Tensor Mul(const Tensor &t1, const Tensor &t2);
 
 TENSORLITE_DLL Tensor Div(const Tensor &t1, const Tensor &t2);
 
+TENSORLITE_DLL Tensor Sqrt(const Tensor &t);
+
 } // namespace native_ops
 } // namespace tl
 

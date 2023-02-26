@@ -1,5 +1,6 @@
 #ifndef TENSORLITE_FP16_IMPL_CUH_
 #define TENSORLITE_FP16_IMPL_CUH_
+#include <cmath>
 #include <cstring>
 #include <limits>
 
@@ -10,40 +11,47 @@ namespace tl {
 #if defined(__CUDACC__)
 inline TENSOR_HOST_DEVICE Float16::Float16(float f) {
   __half tmp = __float2half(f);
-  this->bits = *reinterpret_cast<uint16_t*>(&tmp);
+  this->bits = *reinterpret_cast<uint16_t *>(&tmp);
 }
-inline TENSOR_HOST_DEVICE Float16::Float16(const __half& nv_half)
-  : bits(*reinterpret_cast<const uint16_t *>(&nv_half)) {}
-inline TENSOR_HOST_DEVICE Float16::operator float() const { return __half2float(this->operator __half()); }
+inline TENSOR_HOST_DEVICE Float16::Float16(const __half &nv_half)
+    : bits(*reinterpret_cast<const uint16_t *>(&nv_half)) {}
+inline TENSOR_HOST_DEVICE Float16::operator float() const {
+  return __half2float(this->operator __half());
+}
 inline TENSOR_HOST_DEVICE Float16::operator __half() const {
   auto tmp = bits;
-  return *reinterpret_cast<__half*>(&tmp);
+  return *reinterpret_cast<__half *>(&tmp);
 }
 #else
 #include "fp16.h"
-inline TENSOR_HOST_DEVICE Float16::Float16(float f) : bits(fp16_ieee_from_fp32_value(f)) {}
-inline TENSOR_HOST_DEVICE Float16::operator float() const { return fp16_ieee_to_fp32_value(bits); }
+inline TENSOR_HOST_DEVICE Float16::Float16(float f)
+    : bits(fp16_ieee_from_fp32_value(f)) {}
+inline TENSOR_HOST_DEVICE Float16::operator float() const {
+  return fp16_ieee_to_fp32_value(bits);
+}
 #endif
 
-
-inline TENSOR_HOST_DEVICE Float16 operator+(const Float16& a, const Float16& b) {
+inline TENSOR_HOST_DEVICE Float16 operator+(const Float16 &a,
+                                            const Float16 &b) {
   return static_cast<float>(a) + static_cast<float>(b);
 }
 
-inline TENSOR_HOST_DEVICE Float16 operator-(const Float16& a, const Float16& b) {
+inline TENSOR_HOST_DEVICE Float16 operator-(const Float16 &a,
+                                            const Float16 &b) {
   return static_cast<float>(a) - static_cast<float>(b);
 }
 
-inline TENSOR_HOST_DEVICE Float16 operator*(const Float16& a, const Float16& b) {
+inline TENSOR_HOST_DEVICE Float16 operator*(const Float16 &a,
+                                            const Float16 &b) {
   return static_cast<float>(a) * static_cast<float>(b);
 }
 
-inline TENSOR_HOST_DEVICE Float16 operator/(const Float16& a, const Float16& b)
-__ubsan_ignore_float_divide_by_zero__ {
+inline TENSOR_HOST_DEVICE Float16 operator/(const Float16 &a, const Float16 &b)
+    __ubsan_ignore_float_divide_by_zero__ {
   return static_cast<float>(a) / static_cast<float>(b);
 }
 
-inline TENSOR_HOST_DEVICE Float16 operator-(const Float16& a) {
+inline TENSOR_HOST_DEVICE Float16 operator-(const Float16 &a) {
 #if (defined(__CUDA_ARCH__) && __CUDA_ARCH__ >= 530)
   return __hneg(a);
 #else
@@ -51,22 +59,22 @@ inline TENSOR_HOST_DEVICE Float16 operator-(const Float16& a) {
 #endif
 }
 
-inline TENSOR_HOST_DEVICE Float16& operator+=(Float16& a, const Float16& b) {
+inline TENSOR_HOST_DEVICE Float16 &operator+=(Float16 &a, const Float16 &b) {
   a = a + b;
   return a;
 }
 
-inline TENSOR_HOST_DEVICE Float16& operator-=(Float16& a, const Float16& b) {
+inline TENSOR_HOST_DEVICE Float16 &operator-=(Float16 &a, const Float16 &b) {
   a = a - b;
   return a;
 }
 
-inline TENSOR_HOST_DEVICE Float16& operator*=(Float16& a, const Float16& b) {
+inline TENSOR_HOST_DEVICE Float16 &operator*=(Float16 &a, const Float16 &b) {
   a = a * b;
   return a;
 }
 
-inline TENSOR_HOST_DEVICE Float16& operator/=(Float16& a, const Float16& b) {
+inline TENSOR_HOST_DEVICE Float16 &operator/=(Float16 &a, const Float16 &b) {
   a = a / b;
   return a;
 }
@@ -82,8 +90,8 @@ inline TENSOR_HOST_DEVICE float operator-(Float16 a, float b) {
 inline TENSOR_HOST_DEVICE float operator*(Float16 a, float b) {
   return static_cast<float>(a) * b;
 }
-inline TENSOR_HOST_DEVICE float operator/(Float16 a, float b)
-    __ubsan_ignore_float_divide_by_zero__ {
+inline TENSOR_HOST_DEVICE float
+operator/(Float16 a, float b) __ubsan_ignore_float_divide_by_zero__ {
   return static_cast<float>(a) / b;
 }
 
@@ -96,21 +104,21 @@ inline TENSOR_HOST_DEVICE float operator-(float a, Float16 b) {
 inline TENSOR_HOST_DEVICE float operator*(float a, Float16 b) {
   return a * static_cast<float>(b);
 }
-inline TENSOR_HOST_DEVICE float operator/(float a, Float16 b)
-    __ubsan_ignore_float_divide_by_zero__ {
+inline TENSOR_HOST_DEVICE float
+operator/(float a, Float16 b) __ubsan_ignore_float_divide_by_zero__ {
   return a / static_cast<float>(b);
 }
 
-inline TENSOR_HOST_DEVICE float& operator+=(float& a, const Float16& b) {
+inline TENSOR_HOST_DEVICE float &operator+=(float &a, const Float16 &b) {
   return a += static_cast<float>(b);
 }
-inline TENSOR_HOST_DEVICE float& operator-=(float& a, const Float16& b) {
+inline TENSOR_HOST_DEVICE float &operator-=(float &a, const Float16 &b) {
   return a -= static_cast<float>(b);
 }
-inline TENSOR_HOST_DEVICE float& operator*=(float& a, const Float16& b) {
+inline TENSOR_HOST_DEVICE float &operator*=(float &a, const Float16 &b) {
   return a *= static_cast<float>(b);
 }
-inline TENSOR_HOST_DEVICE float& operator/=(float& a, const Float16& b) {
+inline TENSOR_HOST_DEVICE float &operator/=(float &a, const Float16 &b) {
   return a /= static_cast<float>(b);
 }
 
@@ -125,8 +133,8 @@ inline TENSOR_HOST_DEVICE double operator-(Float16 a, double b) {
 inline TENSOR_HOST_DEVICE double operator*(Float16 a, double b) {
   return static_cast<double>(a) * b;
 }
-inline TENSOR_HOST_DEVICE double operator/(Float16 a, double b)
-    __ubsan_ignore_float_divide_by_zero__ {
+inline TENSOR_HOST_DEVICE double
+operator/(Float16 a, double b) __ubsan_ignore_float_divide_by_zero__ {
   return static_cast<double>(a) / b;
 }
 
@@ -139,8 +147,8 @@ inline TENSOR_HOST_DEVICE double operator-(double a, Float16 b) {
 inline TENSOR_HOST_DEVICE double operator*(double a, Float16 b) {
   return a * static_cast<double>(b);
 }
-inline TENSOR_HOST_DEVICE double operator/(double a, Float16 b)
-    __ubsan_ignore_float_divide_by_zero__ {
+inline TENSOR_HOST_DEVICE double
+operator/(double a, Float16 b) __ubsan_ignore_float_divide_by_zero__ {
   return a / static_cast<double>(b);
 }
 
@@ -200,13 +208,16 @@ inline TENSOR_HOST_DEVICE Float16 operator/(int64_t a, Float16 b) {
   return static_cast<Float16>(a) / b;
 }
 
+inline TENSOR_HOST_DEVICE fp16_t sqrt(fp16_t b) {
+  return ::sqrt(static_cast<float>(b));
+}
+
 } // namespace tl
 
 namespace std {
 
-template <>
-class numeric_limits<::tl::Float16> {
- public:
+template <> class numeric_limits<::tl::Float16> {
+public:
   static constexpr bool is_specialized = true;
   static constexpr bool is_signed = true;
   static constexpr bool is_integer = false;
@@ -262,4 +273,4 @@ class numeric_limits<::tl::Float16> {
 };
 } // namespace std
 
-#endif //TENSORLITE_FP16_IMPL_CUH_
+#endif // TENSORLITE_FP16_IMPL_CUH_

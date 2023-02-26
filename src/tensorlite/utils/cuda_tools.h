@@ -9,6 +9,7 @@
 #include "tensorlite/utils/cuda_common.h"
 #include "tensorlite/utils/function_traits.h"
 #include <cuda_fp16.h>
+#include <tuple>
 #include <type_traits>
 #include <utility>
 
@@ -234,6 +235,100 @@ CudaContiguousKernel(TensorIterator &iter, Op &&op) {
         }
         invoke(op, &base_ptrs[0], &offset[0], 1);
       });
+}
+
+template <typename Op, typename IndexTy, typename Return, typename ArgTypeTuple,
+          size_t... INDEX>
+TENSOR_DEVICE std::enable_if_t<!std::is_void_v<Return>, Return>
+typed_invoke_impl(const Op &op, char *const *data, const IndexTy *strides,
+                  int i, std::index_sequence<INDEX...>, ArgTypeTuple) {
+  return op(*(typename std::tuple_element_t<INDEX, ArgTypeTuple>
+                  *)(data[INDEX] + i * strides[INDEX])...);
+}
+
+template <typename Op, typename IndexTy, typename Return, typename ArgTypeTuple,
+          size_t... INDEX>
+TENSOR_DEVICE std::enable_if_t<std::is_void_v<Return>>
+typed_invoke_impl(const Op &op, char *const *data, const IndexTy *strides,
+                  int i, std::index_sequence<INDEX...>, ArgTypeTuple) {
+  op(*(typename std::tuple_element_t<INDEX, ArgTypeTuple>
+           *)(data[INDEX] + i * strides[INDEX])...);
+}
+
+template <typename Op, typename IndexTy, typename Return, typename... Args>
+TENSOR_DEVICE std::enable_if_t<!std::is_void_v<Return>, Return>
+typed_invoke(const Op &op, char *const *data, const IndexTy *strides, int i) {
+  using ArgTypeTuple = std::tuple<Args...>;
+  using Indices = std::make_index_sequence<sizeof...(Args)>;
+  return typed_invoke_impl<Op, IndexTy, Return>(op, data, strides, i, Indices{},
+                                                ArgTypeTuple{});
+}
+
+template <typename Op, typename IndexTy, typename Return, typename... Args>
+TENSOR_DEVICE std::enable_if_t<std::is_void_v<Return>>
+typed_invoke(const Op &op, char *const *data, const IndexTy *strides, int i) {
+  using ArgTypeTuple = std::tuple<Args...>;
+  using Indices = std::make_index_sequence<sizeof...(Args)>;
+  typed_invoke_impl<Op, IndexTy, Return>(op, data, strides, i, Indices{},
+                                         ArgTypeTuple{});
+}
+
+template <typename Op, typename Return, typename... Args>
+std::enable_if_t<!std::is_void_v<Return>>
+TypedCudaContiguousKernel(TensorIterator &iter, Op &&op) {
+  CHECK(iter.IsValid());
+
+  constexpr size_t num_tensors = sizeof...(Args) + 1;
+  std::array<char *, num_tensors> base_ptrs;
+  std::array<size_t, num_tensors> elem_sizes;
+#ifndef _MSC_VER
+#pragma unroll
+#endif
+  for (size_t t = 0; t < num_tensors; ++t) {
+    base_ptrs[t] = reinterpret_cast<char *>(iter.Tensors()[t].RawPtr());
+    elem_sizes[t] = iter.Tensors()[t].GetDataType().Size();
+  }
+
+  constexpr size_t unroll = sizeof(Return) >= 4 ? 2 : 4;
+
+  cudaElemwiseKernelImpl<128, unroll>(
+      iter.NumElem(), [=] TENSOR_DEVICE(size_t idx) {
+        size_t offset[num_tensors];
+        for (int i = 0; i < num_tensors; ++i) {
+          offset[i] = idx * elem_sizes[i];
+        }
+        Return *out = (Return *)(base_ptrs[0] + offset[0]);
+        *out = typed_invoke<Op, size_t, Return, Args...>(op, &base_ptrs[1],
+                                                         &offset[1], 1);
+      });
+}
+
+template <typename Op, typename Return, typename... Args>
+std::enable_if_t<std::is_void_v<Return>>
+TypedCudaContiguousKernel(TensorIterator &iter, Op &&op) {
+  CHECK(iter.IsValid());
+
+  constexpr size_t num_tensors = sizeof...(Args);
+  std::array<char *, num_tensors> base_ptrs;
+  std::array<size_t, num_tensors> elem_sizes;
+#ifndef _MSC_VER
+#pragma unroll
+#endif
+  for (size_t t = 0; t < num_tensors; ++t) {
+    base_ptrs[t] = reinterpret_cast<char *>(iter.Tensors()[t].RawPtr());
+    elem_sizes[t] = iter.Tensors()[t].GetDataType().Size();
+  }
+
+  constexpr size_t unroll = sizeof(Return) >= 4 ? 2 : 4;
+
+  cudaElemwiseKernelImpl<128, unroll>(iter.NumElem(), [=] TENSOR_DEVICE(
+                                                          size_t idx) {
+    size_t offset[num_tensors];
+    for (int i = 0; i < num_tensors; ++i) {
+      offset[i] = idx * elem_sizes[i];
+    }
+    typed_invoke<Op, size_t, Return, Args...>(op, &base_ptrs[0], &offset[0], 1);
+  });
 }
 
 /**

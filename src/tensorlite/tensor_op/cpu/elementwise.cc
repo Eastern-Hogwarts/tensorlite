@@ -16,6 +16,13 @@ void BinaryElementwiseOpKernel(Tensor &out, const Tensor &t1, const Tensor &t2,
   ::tl::cpu::CPUElemwiseKernel(iter, std::forward<BinaryOp>(op));
 }
 
+template <typename DataTy, typename Unary>
+void UnaryElementwiseOpKernel(Tensor &out, const Tensor &t, Unary &&op) {
+  TensorIterator iter;
+  iter.AddOutput(out).AddInput(t).Build();
+  ::tl::cpu::CPUElemwiseKernel(iter, std::forward<Unary>(op));
+}
+
 } // namespace
 
 #define DEFINE_BINARY_INFIX(name, infix_op)                                    \
@@ -48,4 +55,18 @@ DEFINE_BINARY_INFIX(Div, /);
 
 #undef DEFINE_BINARY_INFIX
 
+#define DEFINE_UNARY(name, op)                                                 \
+  Tensor Cpu##name(const Tensor &t) {                                          \
+    Tensor out = Tensor::SameAs(t);                                            \
+    DTYPE_SWITCH(t.GetDataType().GetTag(), [&]() {                             \
+      UnaryElementwiseOpKernel<scalar_t>(out, t,                               \
+                                         [](scalar_t x) { return op(x); });    \
+    });                                                                        \
+    return out;                                                                \
+  }                                                                            \
+  OP_IMPL(Native_##name, kCPU, Cpu##name);
+
+DEFINE_UNARY(Sqrt, sqrt);
+
+#undef DEFINE_UNARY
 } // namespace tl

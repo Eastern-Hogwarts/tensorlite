@@ -160,3 +160,16 @@ TEST(TestCudaTensor, TestCudaTensorAdd) {
     EXPECT_EQ(ptr[i], 1.);
   }
 }
+
+TEST(TestCudaTensor, TestCudaTensorSqrt) {
+  tl::Tensor t = tl::Tensor::Empty({4}, tl::DataType("half"), 0,
+                                   tl::Device::CudaDevice(0));
+  t.Fill<tl::fp16_t>(tl::fp16_t(4.));
+  auto o = tl::native_ops::Sqrt(t).Transfer(tl::Device::DefaultDevice());
+
+  EXPECT_EQ(o.GetNumElems(), 4);
+  auto *ptr = o.TypedPtr<tl::fp16_t>();
+  for (auto i = 0; i < o.GetNumElems(); ++i) {
+    EXPECT_LT(std::abs(static_cast<float>(ptr[i]) - 2.f), 1e-3f);
+  }
+}

@@ -26,5 +26,11 @@ Tensor Div(const Tensor &t1, const Tensor &t2) {
       "Native_Div", t1.GetDevice().GetType(), t1, t2);
 }
 
+OP_DEF(Native_Sqrt);
+Tensor Sqrt(const Tensor &t) {
+  return DeviceDispatchCall<Tensor, Tensor>("Native_Sqrt",
+                                            t.GetDevice().GetType(), t);
+}
+
 } // namespace native_ops
 } // namespace tl
