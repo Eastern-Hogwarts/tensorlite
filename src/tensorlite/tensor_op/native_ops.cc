@@ -5,6 +5,7 @@
 namespace tl {
 namespace native_ops {
 
+/// Binary ops
 OP_DEF(Native_Add);
 Tensor Add(const Tensor &t1, const Tensor &t2) {
   return DeviceDispatchCall<Tensor, Tensor, Tensor>(
@@ -26,10 +27,16 @@ Tensor Div(const Tensor &t1, const Tensor &t2) {
       "Native_Div", t1.GetDevice().GetType(), t1, t2);
 }
 
+/// Unary ops
 OP_DEF(Native_Sqrt);
 Tensor Sqrt(const Tensor &t) {
   return DeviceDispatchCall<Tensor, Tensor>("Native_Sqrt",
                                             t.GetDevice().GetType(), t);
+}
+
+OP_DEF(Native_Neg);
+Tensor Neg(const Tensor &t) {
+  return DeviceDispatchCall<Tensor, Tensor>("Native_Neg", t.GetDevice().GetType(), t);
 }
 
 } // namespace native_ops

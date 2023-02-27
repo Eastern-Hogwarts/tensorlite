@@ -27,6 +27,8 @@ void TypedUnaryElementwiseOpKernel(Tensor &out, const Tensor &t, UnaryOp &&op) {
 
 } // namespace
 
+namespace native_ops {
+
 #define DEFINE_BINARY_INFIX(name, infix_op)                                    \
   Tensor Cuda##name(const Tensor &t1, const Tensor &t2) {                      \
     CHECK_EQ(t1.GetDevice(), t2.GetDevice())                                   \
@@ -45,6 +47,7 @@ void TypedUnaryElementwiseOpKernel(Tensor &out, const Tensor &t, UnaryOp &&op) {
     DTYPE_SWITCH(dtype.GetTag(), [&]() {                                       \
       BinaryElementwiseOpKernel<scalar_t>(                                     \
           out, t1, t2, [] CUDA_LAMBDA(scalar_t a, scalar_t b) -> scalar_t {    \
+            printf("a: %f, b: %f\n", (float)a, (float)b);\
             return a infix_op b;                                               \
           });                                                                  \
     });                                                                        \
@@ -59,10 +62,10 @@ DEFINE_BINARY_INFIX(Div, /);
 
 #undef DEFINE_BINARY_INFIX
 
-#define DEFINE_UNARY(name, op)                                                 \
+#define DEFINE_UNARY_GENERAL(name, op, switch_type)                            \
   Tensor Cuda##name(const Tensor &t) {                                         \
     Tensor out = Tensor::SameAs(t);                                            \
-    DTYPE_SWITCH_FLOAT(t.GetDataType().GetTag(), [&]() {                       \
+    switch_type(t.GetDataType().GetTag(), [&]() {                              \
       TypedUnaryElementwiseOpKernel<scalar_t>(                                 \
           out, t, [] TENSOR_DEVICE(scalar_t x) { return op(x); });             \
     });                                                                        \
@@ -70,9 +73,23 @@ DEFINE_BINARY_INFIX(Div, /);
   }                                                                            \
   OP_IMPL(Native_##name, kCUDA, Cuda##name);
 
-#define CUDA_SCALAR_OP(name) ::tl::native_ops::name<DeviceType::kCUDA>()
+#define CUDA_SCALAR_OP(name) ::tl::native_scalar_ops::name<DeviceType::kCUDA>()
 
-DEFINE_UNARY(Sqrt, CUDA_SCALAR_OP(SqrtOp));
+#define DEFINE_UNARY(name, op) DEFINE_UNARY_GENERAL(name, op, DTYPE_SWITCH)
+
+DEFINE_UNARY(Neg, -);
+
 #undef DEFINE_UNARY
 
+#define DEFINE_UNARY_ONLY_FLOAT(name, op)                                      \
+  DEFINE_UNARY_GENERAL(name, op, DTYPE_SWITCH_FLOAT)
+
+DEFINE_UNARY_ONLY_FLOAT(Sqrt, CUDA_SCALAR_OP(SqrtOp));
+
+#undef DEFINE_UNARY_ONLY_FLOAT
+
+#undef CUDA_SCALAR_OP
+#undef DEFINE_UNARY_GENERAL
+
+} // namespace native_ops
 } // namespace tl

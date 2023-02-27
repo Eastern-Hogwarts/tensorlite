@@ -25,6 +25,8 @@ void UnaryElementwiseOpKernel(Tensor &out, const Tensor &t, Unary &&op) {
 
 } // namespace
 
+namespace native_ops {
+
 #define DEFINE_BINARY_INFIX(name, infix_op)                                    \
   Tensor Cpu##name(const Tensor &t1, const Tensor &t2) {                       \
     CHECK_EQ(t1.GetDevice(), t2.GetDevice())                                   \
@@ -67,6 +69,9 @@ DEFINE_BINARY_INFIX(Div, /);
   OP_IMPL(Native_##name, kCPU, Cpu##name);
 
 DEFINE_UNARY(Sqrt, sqrt);
+DEFINE_UNARY(Neg, -);
 
 #undef DEFINE_UNARY
+
+} // namespace native_ops
 } // namespace tl
