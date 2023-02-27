@@ -39,5 +39,10 @@ Tensor Neg(const Tensor &t) {
   return DeviceDispatchCall<Tensor, Tensor>("Native_Neg", t.GetDevice().GetType(), t);
 }
 
+OP_DEF(Native_Abs);
+Tensor Abs(const Tensor &t) {
+  return DeviceDispatchCall<Tensor, Tensor>("Native_Abs", t.GetDevice().GetType(), t);
+}
+
 } // namespace native_ops
 } // namespace tl

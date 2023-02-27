@@ -4,6 +4,7 @@
 #include "tensorlite/tensor.h"
 #include "tensorlite/utils/cpu_tools.h"
 #include "tensorlite/utils/logging.h"
+#include "tensorlite/utils/native_scalar_ops.h"
 
 namespace tl {
 namespace {
@@ -56,6 +57,8 @@ DEFINE_BINARY_INFIX(Mul, *);
 DEFINE_BINARY_INFIX(Div, /);
 
 #undef DEFINE_BINARY_INFIX
+#define CPU_SCALAR_OP(name) ::tl::native_scalar_ops::name<DeviceType::kCPU>()
+
 
 #define DEFINE_UNARY(name, op)                                                 \
   Tensor Cpu##name(const Tensor &t) {                                          \
@@ -70,7 +73,9 @@ DEFINE_BINARY_INFIX(Div, /);
 
 DEFINE_UNARY(Sqrt, sqrt);
 DEFINE_UNARY(Neg, -);
+DEFINE_UNARY(Abs, CPU_SCALAR_OP(AbsOp));
 
+#undef CPU_SCALAR_OP
 #undef DEFINE_UNARY
 
 } // namespace native_ops

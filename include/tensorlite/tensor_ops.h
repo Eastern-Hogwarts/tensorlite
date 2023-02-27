@@ -31,6 +31,8 @@ TENSORLITE_DLL Tensor Sqrt(const Tensor &t);
 
 TENSORLITE_DLL Tensor Neg(const Tensor &t);
 
+TENSORLITE_DLL Tensor Abs(const Tensor &t);
+
 } // namespace native_ops
 } // namespace tl
 
