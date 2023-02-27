@@ -3,6 +3,7 @@
 #include "tensorlite/device/data_transfer.h"
 #include "tensorlite/device/utils.h"
 #include "tensorlite/tensor.h"
+#include "tensorlite/tensor_ops.h"
 #include "tensorlite/tensor_op/cpu_internal_op.h"
 
 #if 1 // TODO: change to ENABLE_CUDA
@@ -314,6 +315,22 @@ void Tensor::Display(std::ostream &sm) const {
 
   DTYPE_SWITCH(this->dtype_.GetTag(),
                [&]() { TensorDisplay<scalar_t>(sm, tensor_to_display); });
+}
+
+Tensor Tensor::operator+(const Tensor& other) const {
+  return native_ops::Add(*this, other);
+}
+Tensor Tensor::operator-(const Tensor& other) const {
+  return native_ops::Sub(*this, other);
+}
+Tensor Tensor::operator*(const Tensor& other) const {
+  return native_ops::Mul(*this, other);
+}
+Tensor Tensor::operator/(const Tensor& other) const {
+  return native_ops::Div(*this, other);
+}
+Tensor Tensor::operator-() const {
+  return native_ops::Neg(*this);
 }
 
 } // namespace tl

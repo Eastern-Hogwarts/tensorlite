@@ -1105,6 +1105,19 @@ public:
   TENSORLITE_DLL void Fill(Scalar val);
 
   /**
+   * \brief Arithmetic ops
+   */
+  TENSORLITE_DLL Tensor operator+(const Tensor& other) const;
+
+  TENSORLITE_DLL Tensor operator-(const Tensor& other) const;
+
+  TENSORLITE_DLL Tensor operator*(const Tensor& other) const;
+
+  TENSORLITE_DLL Tensor operator/(const Tensor& other) const;
+
+  TENSORLITE_DLL Tensor operator-() const; // neg
+
+  /**
    * \brief Fill a tensor with a section of bytes.
    *
    * \param t The tensor to be filled.
