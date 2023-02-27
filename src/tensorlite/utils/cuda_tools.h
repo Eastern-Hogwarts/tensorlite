@@ -100,16 +100,16 @@ template <typename ShapeElemType, size_t NARGS> struct OffsetCalculator {
 #pragma unroll
 #endif
       for (size_t t = 0; t < NARGS; ++t) {
-        strides_[i][t] = strides[i * NARGS + t];
+        strides_[i][t] = strides[i + t * num_axes];
       }
     }
   }
-  // offset must be a pointer points to a array with size kMaxTensorRank
+
   TENSOR_HOST_DEVICE void get(size_t gidx, size_t *offset) const {
 #ifndef _MSC_VER
 #pragma unroll
 #endif
-    for (size_t i = 0; i < kMaxTensorRank; ++i) {
+    for (size_t i = 0; i < NARGS; ++i) {
       offset[i] = 0;
     }
 
