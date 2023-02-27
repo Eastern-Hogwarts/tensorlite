@@ -44,5 +44,11 @@ Tensor Abs(const Tensor &t) {
   return DeviceDispatchCall<Tensor, Tensor>("Native_Abs", t.GetDevice().GetType(), t);
 }
 
+OP_DEF(Native_Acos);
+Tensor Acos(const Tensor &t) {
+  return DeviceDispatchCall<Tensor, Tensor>("Native_Acos", t.GetDevice().GetType(), t);
+}
+
+
 } // namespace native_ops
 } // namespace tl

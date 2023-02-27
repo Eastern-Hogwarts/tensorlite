@@ -33,6 +33,8 @@ TENSORLITE_DLL Tensor Neg(const Tensor &t);
 
 TENSORLITE_DLL Tensor Abs(const Tensor &t);
 
+TENSORLITE_DLL Tensor Acos(const Tensor &t);
+
 } // namespace native_ops
 } // namespace tl
 

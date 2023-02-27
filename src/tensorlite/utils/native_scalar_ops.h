@@ -80,6 +80,21 @@ template <> struct AbsOp<DeviceType::kCUDA> {
 };
 #endif
 
+template <DeviceType Device> struct AcosOp {
+  template <typename DType> DType operator()(DType val) {
+    using ::std::acos;
+    return acos(val);
+  }
+};
+
+#ifdef __CUDACC__
+template <> struct AcosOp<DeviceType::kCUDA> {
+  template <typename DType> TENSOR_DEVICE DType operator()(DType val) {
+    return acos(val);
+  }
+};
+#endif
+
 } // namespace native_scalar_ops
 } // namespace tl
 

@@ -75,8 +75,22 @@ DEFINE_UNARY(Sqrt, sqrt);
 DEFINE_UNARY(Neg, -);
 DEFINE_UNARY(Abs, CPU_SCALAR_OP(AbsOp));
 
-#undef CPU_SCALAR_OP
 #undef DEFINE_UNARY
 
+#define DEFINE_UNARY_ONLY_FLOAT(name, op)                                                 \
+  Tensor Cpu##name(const Tensor &t) {                                          \
+    Tensor out = Tensor::SameAs(t);                                            \
+    DTYPE_SWITCH_FLOAT(t.GetDataType().GetTag(), [&]() {                             \
+      UnaryElementwiseOpKernel<scalar_t>(out, t,                               \
+                                         [](scalar_t x) { return op(x); });    \
+    });                                                                        \
+    return out;                                                                \
+  }                                                                            \
+  OP_IMPL(Native_##name, kCPU, Cpu##name);
+
+DEFINE_UNARY_ONLY_FLOAT(Acos, CPU_SCALAR_OP(AcosOp));
+
+#undef DEFINE_UNARY_ONLY_FLOAT
+#undef CPU_SCALAR_OP
 } // namespace native_ops
 } // namespace tl

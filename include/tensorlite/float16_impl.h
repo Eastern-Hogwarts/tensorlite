@@ -212,6 +212,10 @@ inline TENSOR_HOST_DEVICE fp16_t sqrt(fp16_t b) {
   return ::sqrt(static_cast<float>(b));
 }
 
+inline TENSOR_HOST_DEVICE fp16_t acos(fp16_t b) {
+  return ::acosf(static_cast<float>(b));
+}
+
 } // namespace tl
 
 namespace std {
