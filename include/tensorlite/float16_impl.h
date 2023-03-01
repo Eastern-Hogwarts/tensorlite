@@ -216,6 +216,10 @@ inline TENSOR_HOST_DEVICE fp16_t acos(fp16_t b) {
   return ::acosf(static_cast<float>(b));
 }
 
+inline TENSOR_HOST_DEVICE fp16_t acosh(fp16_t b) {
+  return ::acoshf(static_cast<float>(b));
+}
+
 } // namespace tl
 
 namespace std {

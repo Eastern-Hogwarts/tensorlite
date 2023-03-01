@@ -25,18 +25,6 @@ template <DeviceType Device> struct SqrtOp {
   }
 };
 
-#ifdef __CUDACC__
-template <> struct SqrtOp<DeviceType::kCUDA> {
-  template <typename DType> TENSOR_DEVICE DType operator()(DType val) {
-    return sqrt(val);
-  }
-
-  template <> TENSOR_DEVICE tl::fp16_t operator()(tl::fp16_t val) {
-    return hsqrt(val);
-  }
-};
-#endif
-
 template <DeviceType Device> struct AbsOp {
   template <typename DType> DType operator()(DType val) {
     using ::std::abs;
@@ -56,7 +44,31 @@ template <DeviceType Device> struct AbsOp {
   }
 };
 
+template <DeviceType Device> struct AcosOp {
+  template <typename DType> DType operator()(DType val) {
+    using ::std::acos;
+    return acos(val);
+  }
+};
+
+template <DeviceType Device> struct AcoshOp {
+  template <typename DType> DType operator()(DType val) {
+    using ::std::acosh;
+    return acosh(val);
+  }
+};
+
 #ifdef __CUDACC__
+template <> struct SqrtOp<DeviceType::kCUDA> {
+  template <typename DType> TENSOR_DEVICE DType operator()(DType val) {
+    return sqrt(val);
+  }
+
+  template <> TENSOR_DEVICE tl::fp16_t operator()(tl::fp16_t val) {
+    return hsqrt(val);
+  }
+};
+
 template <> struct AbsOp<DeviceType::kCUDA> {
   template <typename DType> TENSOR_DEVICE DType operator()(DType val) {
     return abs(val);
@@ -78,19 +90,20 @@ template <> struct AbsOp<DeviceType::kCUDA> {
     return __habs(val);
   }
 };
-#endif
 
-template <DeviceType Device> struct AcosOp {
-  template <typename DType> DType operator()(DType val) {
-    using ::std::acos;
+template <> struct AcosOp<DeviceType::kCUDA> {
+  template <typename DType> TENSOR_DEVICE DType operator()(DType val) {
     return acos(val);
   }
 };
 
-#ifdef __CUDACC__
-template <> struct AcosOp<DeviceType::kCUDA> {
+template <> struct AcoshOp<DeviceType::kCUDA> {
   template <typename DType> TENSOR_DEVICE DType operator()(DType val) {
-    return acos(val);
+    return acosh(val);
+  }
+
+  template <> TENSOR_DEVICE float operator()(float val) {
+    return acoshf(val);
   }
 };
 #endif

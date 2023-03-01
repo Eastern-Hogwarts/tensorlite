@@ -79,3 +79,49 @@ TEST(TestCudaTensor, TestCudaTensorSqrt) {
     EXPECT_LT(ScalarAbsDiff<float>(ptr[i], 2.f), 1e-3f);
   }
 }
+
+
+TEST(TestCudaTensor, TestCudaTensorAcos) {
+  tl::Tensor t = tl::Tensor::Uniform({12}, 0, 1, tl::DataType("float"), tl::Device::CudaDevice(0));
+  auto o = tl::native_ops::Acos(t);
+
+  auto t_cpu = t.Transfer(tl::Device::DefaultDevice());
+  auto o_cpu = o.Transfer(tl::Device::DefaultDevice());
+
+  EXPECT_EQ(o.GetNumElems(), 12);
+  auto *optr = o_cpu.TypedPtr<float>();
+  auto *tptr = t_cpu.TypedPtr<float>();
+  for (auto i = 0; i < o.GetNumElems(); ++i) {
+    EXPECT_LT(ScalarAbsDiff<float>(optr[i], acosf(tptr[i])), 1e-2f);
+  }
+}
+
+TEST(TestCudaTensor, TestCudaTensorAcosh) {
+  tl::Tensor t = tl::Tensor::Uniform({12}, 1, 3, tl::DataType("float"), tl::Device::CudaDevice(0));
+  auto o = tl::native_ops::Acosh(t);
+
+  auto t_cpu = t.Transfer(tl::Device::DefaultDevice());
+  auto o_cpu = o.Transfer(tl::Device::DefaultDevice());
+
+  EXPECT_EQ(o.GetNumElems(), 12);
+  auto *optr = o_cpu.TypedPtr<float>();
+  auto *tptr = t_cpu.TypedPtr<float>();
+  for (auto i = 0; i < o.GetNumElems(); ++i) {
+    EXPECT_LT(ScalarAbsDiff<float>(optr[i], acoshf(tptr[i])), 1e-3f);
+  }
+}
+
+TEST(TestCudaTensor, TestCudaTensorAbs) {
+  tl::Tensor t = tl::Tensor::Normal({12}, 0, 1, tl::DataType("float"), tl::Device::CudaDevice(0));
+  auto o = tl::native_ops::Abs(t);
+
+  auto t_cpu = t.Transfer(tl::Device::DefaultDevice());
+  auto o_cpu = o.Transfer(tl::Device::DefaultDevice());
+
+  EXPECT_EQ(o.GetNumElems(), 12);
+  auto *optr = o_cpu.TypedPtr<float>();
+  auto *tptr = t_cpu.TypedPtr<float>();
+  for (auto i = 0; i < o.GetNumElems(); ++i) {
+    EXPECT_FLOAT_EQ(optr[i], abs(tptr[i]));
+  }
+}

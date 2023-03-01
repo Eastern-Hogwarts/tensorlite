@@ -79,3 +79,39 @@ TEST(TestCpuTensor, TestCpuTensorSqrt) {
     EXPECT_LT(ScalarAbsDiff<float>(ptr[i], 2.f), 1e-3f);
   }
 }
+
+TEST(TestCpuTensor, TestCpuTensorAcos) {
+  tl::Tensor t = tl::Tensor::Uniform({12}, 0, 1, tl::DataType("float"));
+  auto o = tl::native_ops::Acos(t);
+
+  EXPECT_EQ(o.GetNumElems(), 12);
+  auto *optr = o.TypedPtr<float>();
+  auto *tptr = t.TypedPtr<float>();
+  for (auto i = 0; i < o.GetNumElems(); ++i) {
+    EXPECT_FLOAT_EQ(optr[i], acosf(tptr[i]));
+  }
+}
+
+TEST(TestCpuTensor, TestCpuTensorAcosh) {
+  tl::Tensor t = tl::Tensor::Uniform({12}, 1, 3, tl::DataType("float"));
+  auto o = tl::native_ops::Acosh(t);
+
+  EXPECT_EQ(o.GetNumElems(), 12);
+  auto *optr = o.TypedPtr<float>();
+  auto *tptr = t.TypedPtr<float>();
+  for (auto i = 0; i < o.GetNumElems(); ++i) {
+    EXPECT_FLOAT_EQ(optr[i], acoshf(tptr[i]));
+  }
+}
+
+TEST(TestCpuTensor, TestCpuTensorAbs) {
+  tl::Tensor t = tl::Tensor::Normal({12}, 0, 1, tl::DataType("float"));
+  auto o = tl::native_ops::Abs(t);
+
+  EXPECT_EQ(o.GetNumElems(), 12);
+  auto *optr = o.TypedPtr<float>();
+  auto *tptr = t.TypedPtr<float>();
+  for (auto i = 0; i < o.GetNumElems(); ++i) {
+    EXPECT_FLOAT_EQ(optr[i], abs(tptr[i]));
+  }
+}

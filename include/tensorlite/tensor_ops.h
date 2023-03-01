@@ -35,6 +35,8 @@ TENSORLITE_DLL Tensor Abs(const Tensor &t);
 
 TENSORLITE_DLL Tensor Acos(const Tensor &t);
 
+TENSORLITE_DLL Tensor Acosh(const Tensor &t);
+
 } // namespace native_ops
 } // namespace tl
 
