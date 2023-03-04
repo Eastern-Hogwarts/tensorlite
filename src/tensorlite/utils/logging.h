@@ -67,11 +67,19 @@ class LogMessageFatal {
 public:
   LogMessageFatal(const char *file, int line) { GetEntry().Init(file, line); }
   std::ostringstream &stream() { return GetEntry().log_stream; }
+
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4722)
+#endif
   // destructor does not throw by default
   UTILS_NO_INLINE ~LogMessageFatal() noexcept(false) {
     throw GetEntry().Finalize();
     abort();
   }
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 private:
   struct Entry {

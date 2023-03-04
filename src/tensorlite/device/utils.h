@@ -2,6 +2,7 @@
 #define TENSORLITE_DEVICE_UTILS_H_
 
 #include "tensorlite/device.h"
+#include "tensorlite/macros.h"
 #include "tensorlite/utils/logging.h"
 
 namespace tl {
@@ -19,8 +20,8 @@ namespace tl {
     switch (_sv) {                                                             \
       DEVICE_SWITCH_CASE(::tl::DeviceType::kCPU, device_type_name,             \
                          __VA_ARGS__)                                          \
-      DEVICE_SWITCH_CASE(::tl::DeviceType::kCUDA, device_type_name,            \
-                         __VA_ARGS__)                                          \
+      CUDA_MACRO_OPT(DEVICE_SWITCH_CASE(::tl::DeviceType::kCUDA,               \
+                                        device_type_name, __VA_ARGS__))        \
     default:                                                                   \
       LOG_ERROR << "unknown device type\n";                                    \
       break;                                                                   \

@@ -1107,13 +1107,13 @@ public:
   /**
    * \brief Arithmetic ops
    */
-  TENSORLITE_DLL Tensor operator+(const Tensor& other) const;
+  TENSORLITE_DLL Tensor operator+(const Tensor &other) const;
 
-  TENSORLITE_DLL Tensor operator-(const Tensor& other) const;
+  TENSORLITE_DLL Tensor operator-(const Tensor &other) const;
 
-  TENSORLITE_DLL Tensor operator*(const Tensor& other) const;
+  TENSORLITE_DLL Tensor operator*(const Tensor &other) const;
 
-  TENSORLITE_DLL Tensor operator/(const Tensor& other) const;
+  TENSORLITE_DLL Tensor operator/(const Tensor &other) const;
 
   TENSORLITE_DLL Tensor operator-() const; // neg
 

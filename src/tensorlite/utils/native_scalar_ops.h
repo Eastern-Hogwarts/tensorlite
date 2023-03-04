@@ -7,7 +7,7 @@
 #ifdef __CUDACC__
 #include <cuda/std/cmath>
 #include <cuda_fp16.h>
-#endif
+#endif // __CUDACC__
 
 #include "tensorlite/device.h"
 #include "tensorlite/dtype.h"
@@ -31,17 +31,11 @@ template <DeviceType Device> struct AbsOp {
     return abs(val);
   }
 
-  template <> uint64_t operator()(uint64_t val) {
-    return val;
-  }
+  template <> uint64_t operator()(uint64_t val) { return val; }
 
-  template <> uint32_t operator()(uint32_t val) {
-    return val;
-  }
+  template <> uint32_t operator()(uint32_t val) { return val; }
 
-  template <> uint8_t operator()(uint8_t val) {
-    return val;
-  }
+  template <> uint8_t operator()(uint8_t val) { return val; }
 };
 
 template <DeviceType Device> struct AcosOp {
@@ -74,17 +68,11 @@ template <> struct AbsOp<DeviceType::kCUDA> {
     return abs(val);
   }
 
-  template <> TENSOR_DEVICE uint64_t operator()(uint64_t val) {
-    return val;
-  }
+  template <> TENSOR_DEVICE uint64_t operator()(uint64_t val) { return val; }
 
-  template <> TENSOR_DEVICE uint32_t operator()(uint32_t val) {
-    return val;
-  }
+  template <> TENSOR_DEVICE uint32_t operator()(uint32_t val) { return val; }
 
-  template <> TENSOR_DEVICE uint8_t operator()(uint8_t val) {
-    return val;
-  }
+  template <> TENSOR_DEVICE uint8_t operator()(uint8_t val) { return val; }
 
   template <> TENSOR_DEVICE tl::fp16_t operator()(tl::fp16_t val) {
     return __habs(val);
@@ -102,11 +90,9 @@ template <> struct AcoshOp<DeviceType::kCUDA> {
     return acosh(val);
   }
 
-  template <> TENSOR_DEVICE float operator()(float val) {
-    return acoshf(val);
-  }
+  template <> TENSOR_DEVICE float operator()(float val) { return acoshf(val); }
 };
-#endif
+#endif // __CUDACC__
 
 } // namespace native_scalar_ops
 } // namespace tl

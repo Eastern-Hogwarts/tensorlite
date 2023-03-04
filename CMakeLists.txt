@@ -4,11 +4,6 @@ project(TENSORLITE LANGUAGES CXX VERSION 0.1)
 
 message(STATUS "Build Tensorlite version: ${CMAKE_PROJECT_VERSION}")
 
-include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/tools/get_cuda_arch.cmake")
-get_cuda_arch()
-
-set(CMAKE_CUDA_ARCHITECTURES ${CUDA_DEVICE_CC} CACHE STRING "The compute capability id of this cuda arch")
-
 if(EXISTS ${CMAKE_CURRENT_BINARY_DIR}/config.cmake)
   include(${CMAKE_CURRENT_BINARY_DIR}/config.cmake)
 else()
@@ -38,39 +33,55 @@ if(MSVC AND NOT BUILD_PYTHON_API)
   set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 endif()
 
-include(CheckLanguage)
-check_language(CUDA)
-if(CMAKE_CUDA_COMPILER)
-  enable_language(CUDA)
-else()
-  message(FATAL_ERROR "Cannot find CUDA toolkit in this machine")
-endif()
+if(ENABLE_CUDA)
+  # Get arch of cuda
+  include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/tools/get_cuda_arch.cmake")
+  get_cuda_arch()
+  set(CMAKE_CUDA_ARCHITECTURES ${CUDA_DEVICE_CC} CACHE STRING "The compute capability id of this cuda arch")
 
-# use shared cudart
-set(CMAKE_CUDA_RUNTIME_LIBRARY SHARED)
-message(STATUS "Use CUDA Compiler: ${CMAKE_CUDA_COMPILER_ID}:${CMAKE_CUDA_COMPILER_VERSION}")
-message(STATUS "CUDA Compiler Path: ${CMAKE_CUDA_COMPILER}")
+  # enable cuda language
+  include(CheckLanguage)
+  check_language(CUDA)
+  if(CMAKE_CUDA_COMPILER)
+    enable_language(CUDA)
+  else()
+    message(FATAL_ERROR "Cannot find CUDA toolkit in this machine")
+  endif()
 
-set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --extended-lambda") # enable lambda in cuda
-set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-relaxed-constexpr") # enable constexpr expression in cuda
-set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -arch=sm_${CMAKE_CUDA_ARCHITECTURES}")
-message(STATUS "Build with CUDA Computation Capability: ${CMAKE_CUDA_ARCHITECTURES}")
+  # use shared cudart
+  set(CMAKE_CUDA_RUNTIME_LIBRARY SHARED)
+  message(STATUS "Use CUDA Compiler: ${CMAKE_CUDA_COMPILER_ID}:${CMAKE_CUDA_COMPILER_VERSION}")
+  message(STATUS "CUDA Compiler Path: ${CMAKE_CUDA_COMPILER}")
 
-# cuRAND
-include("${CMAKE_SOURCE_DIR}/cmake/modules/cuRAND.cmake")
+  set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --extended-lambda") # enable lambda in cuda
+  set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-relaxed-constexpr") # enable constexpr expression in cuda
+  set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -arch=sm_${CMAKE_CUDA_ARCHITECTURES}")
+  message(STATUS "Build with CUDA Computation Capability: ${CMAKE_CUDA_ARCHITECTURES}")
 
-if(NOT DEFINED CMAKE_CUDA_STANDARD)
-  set(CMAKE_CUDA_STANDARD 17)
-  set(CMAKE_CUDA_STANDARD_REQUIRED ON)
-endif()
+  # cuRAND
+  include("${CMAKE_SOURCE_DIR}/cmake/modules/cuRAND.cmake")
+
+  # set cpp standard for cuda
+  if(NOT DEFINED CMAKE_CUDA_STANDARD)
+    set(CMAKE_CUDA_STANDARD 17)
+    set(CMAKE_CUDA_STANDARD_REQUIRED ON)
+  endif()
+endif(ENABLE_CUDA)
 
 file(GLOB_RECURSE TENSORLITE_SOURCE_LIST "${CMAKE_SOURCE_DIR}/src/tensorlite/*.cc")
-file(GLOB_RECURSE TENSORLITE_CU_LIST "${CMAKE_SOURCE_DIR}/src/tensorlite/*.cu")
-list(APPEND TENSORLITE_SOURCE_LIST ${TENSORLITE_CU_LIST})
+
+# grap cuda source files
+if(ENABLE_CUDA)
+  file(GLOB_RECURSE TENSORLITE_CU_LIST "${CMAKE_SOURCE_DIR}/src/tensorlite/*.cu")
+  list(APPEND TENSORLITE_SOURCE_LIST ${TENSORLITE_CU_LIST})
+endif(ENABLE_CUDA)
+
 add_library(tensorlite SHARED ${TENSORLITE_SOURCE_LIST})
 set_target_properties(tensorlite PROPERTIES POSITION_INDEPENDENT_CODE ON)
-set_target_properties(tensorlite PROPERTIES CUDA_ARCHITECTURES "${CMAKE_CUDA_ARCHITECTURES}")
+
+# set CUDA_ARCHITECTURES prop and define ENABLE_CUDA macro
 if(ENABLE_CUDA)
+  set_target_properties(tensorlite PROPERTIES CUDA_ARCHITECTURES "${CMAKE_CUDA_ARCHITECTURES}")
   target_compile_definitions(tensorlite PRIVATE -DENABLE_CUDA)
   message(STATUS "Build with CUDA")
 endif()
@@ -96,7 +107,11 @@ endif()
 
 target_compile_definitions(tensorlite PRIVATE -DTENSORLITE_EXPORTS)
 target_compile_features(tensorlite PUBLIC cxx_std_17)
-target_link_libraries(tensorlite CUDART ${CURAND_LIBRARY})
+
+# link curand
+if(ENABLE_CUDA)
+  target_link_libraries(tensorlite CUDART ${CURAND_LIBRARY})
+endif(ENABLE_CUDA)
 
 if (ENABLE_OPENMP)
   target_compile_definitions(tensorlite PRIVATE -DUSE_OPENMP)

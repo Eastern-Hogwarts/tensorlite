@@ -47,7 +47,7 @@ namespace native_ops {
     DTYPE_SWITCH(dtype.GetTag(), [&]() {                                       \
       BinaryElementwiseOpKernel<scalar_t>(                                     \
           out, t1, t2, [] CUDA_LAMBDA(scalar_t a, scalar_t b) -> scalar_t {    \
-            printf("a: %f, b: %f\n", (float)a, (float)b);\
+            printf("a: %f, b: %f\n", (float)a, (float)b);                      \
             return a infix_op b;                                               \
           });                                                                  \
     });                                                                        \

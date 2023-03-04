@@ -59,7 +59,6 @@ DEFINE_BINARY_INFIX(Div, /);
 #undef DEFINE_BINARY_INFIX
 #define CPU_SCALAR_OP(name) ::tl::native_scalar_ops::name<DeviceType::kCPU>()
 
-
 #define DEFINE_UNARY(name, op)                                                 \
   Tensor Cpu##name(const Tensor &t) {                                          \
     Tensor out = Tensor::SameAs(t);                                            \
@@ -77,10 +76,10 @@ DEFINE_UNARY(Abs, CPU_SCALAR_OP(AbsOp));
 
 #undef DEFINE_UNARY
 
-#define DEFINE_UNARY_ONLY_FLOAT(name, op)                                                 \
+#define DEFINE_UNARY_ONLY_FLOAT(name, op)                                      \
   Tensor Cpu##name(const Tensor &t) {                                          \
     Tensor out = Tensor::SameAs(t);                                            \
-    DTYPE_SWITCH_FLOAT(t.GetDataType().GetTag(), [&]() {                             \
+    DTYPE_SWITCH_FLOAT(t.GetDataType().GetTag(), [&]() {                       \
       UnaryElementwiseOpKernel<scalar_t>(out, t,                               \
                                          [](scalar_t x) { return op(x); });    \
     });                                                                        \

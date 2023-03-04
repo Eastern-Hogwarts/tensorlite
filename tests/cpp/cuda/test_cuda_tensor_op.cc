@@ -9,8 +9,10 @@ constexpr static CompareTy ScalarAbsDiff(const T1 &val1, const T2 &val2) {
 }
 
 TEST(TestCudaTensor, TestCudaTensorAdd) {
-  tl::Tensor t1 = tl::Tensor::Ones({3, 4}, tl::DataType("double"), tl::Device::CudaDevice(0));
-  tl::Tensor t2 = tl::Tensor::Zeros({4}, tl::DataType("double"), tl::Device::CudaDevice(0));
+  tl::Tensor t1 = tl::Tensor::Ones({3, 4}, tl::DataType("double"),
+                                   tl::Device::CudaDevice(0));
+  tl::Tensor t2 =
+      tl::Tensor::Zeros({4}, tl::DataType("double"), tl::Device::CudaDevice(0));
   auto t3 = tl::native_ops::Add(t1, t2).Transfer(tl::Device::DefaultDevice());
 
   EXPECT_EQ(t3.GetNumElems(), 12);
@@ -21,8 +23,10 @@ TEST(TestCudaTensor, TestCudaTensorAdd) {
 }
 
 TEST(TestCudaTensor, TestCudaTensorSub) {
-  tl::Tensor t1 = tl::Tensor::Ones({3, 4}, tl::DataType("double"), tl::Device::CudaDevice(0));
-  tl::Tensor t2 = tl::Tensor::Zeros({4}, tl::DataType("double"), tl::Device::CudaDevice(0));
+  tl::Tensor t1 = tl::Tensor::Ones({3, 4}, tl::DataType("double"),
+                                   tl::Device::CudaDevice(0));
+  tl::Tensor t2 =
+      tl::Tensor::Zeros({4}, tl::DataType("double"), tl::Device::CudaDevice(0));
   t2.Fill(0.1);
   auto t3 = tl::native_ops::Sub(t1, t2).Transfer(tl::Device::DefaultDevice());
 
@@ -34,8 +38,10 @@ TEST(TestCudaTensor, TestCudaTensorSub) {
 }
 
 TEST(TestCudaTensor, TestCudaTensorMul) {
-  tl::Tensor t1 = tl::Tensor::Ones({3, 4}, tl::DataType("double"), tl::Device::CudaDevice(0));
-  tl::Tensor t2 = tl::Tensor::Full<double>({4}, 2.5, 0, tl::Device::CudaDevice(0));
+  tl::Tensor t1 = tl::Tensor::Ones({3, 4}, tl::DataType("double"),
+                                   tl::Device::CudaDevice(0));
+  tl::Tensor t2 =
+      tl::Tensor::Full<double>({4}, 2.5, 0, tl::Device::CudaDevice(0));
 
   auto t3 = tl::native_ops::Mul(t1, t2).Transfer(tl::Device::DefaultDevice());
 
@@ -47,8 +53,10 @@ TEST(TestCudaTensor, TestCudaTensorMul) {
 }
 
 TEST(TestCudaTensor, TestCudaTensorDiv) {
-  tl::Tensor t1 = tl::Tensor::Full<double>({3, 4}, 4.0, 0, tl::Device::CudaDevice(0));
-  tl::Tensor t2 = tl::Tensor::Full<double>({4}, 2.0, 0, tl::Device::CudaDevice(0));
+  tl::Tensor t1 =
+      tl::Tensor::Full<double>({3, 4}, 4.0, 0, tl::Device::CudaDevice(0));
+  tl::Tensor t2 =
+      tl::Tensor::Full<double>({4}, 2.0, 0, tl::Device::CudaDevice(0));
   auto t3 = tl::native_ops::Div(t1, t2).Transfer(tl::Device::DefaultDevice());
 
   EXPECT_EQ(t3.GetNumElems(), 12);
@@ -59,7 +67,8 @@ TEST(TestCudaTensor, TestCudaTensorDiv) {
 }
 
 TEST(TestCudaTensor, TestCudaTensorNeg) {
-  tl::Tensor t = tl::Tensor::Full<double>({3, 4}, 4.0, 0, tl::Device::CudaDevice(0));
+  tl::Tensor t =
+      tl::Tensor::Full<double>({3, 4}, 4.0, 0, tl::Device::CudaDevice(0));
   auto neg = tl::native_ops::Neg(t).Transfer(tl::Device::DefaultDevice());
 
   EXPECT_EQ(neg.GetNumElems(), 12);
@@ -70,7 +79,8 @@ TEST(TestCudaTensor, TestCudaTensorNeg) {
 }
 
 TEST(TestCudaTensor, TestCudaTensorSqrt) {
-  tl::Tensor t = tl::Tensor::Full({3, 4}, tl::fp16_t(4.), 0, tl::Device::CudaDevice(0));
+  tl::Tensor t =
+      tl::Tensor::Full({3, 4}, tl::fp16_t(4.), 0, tl::Device::CudaDevice(0));
   auto o = tl::native_ops::Sqrt(t).Transfer(tl::Device::DefaultDevice());
 
   EXPECT_EQ(o.GetNumElems(), 12);
@@ -80,9 +90,9 @@ TEST(TestCudaTensor, TestCudaTensorSqrt) {
   }
 }
 
-
 TEST(TestCudaTensor, TestCudaTensorAcos) {
-  tl::Tensor t = tl::Tensor::Uniform({12}, 0, 1, tl::DataType("float"), tl::Device::CudaDevice(0));
+  tl::Tensor t = tl::Tensor::Uniform({12}, 0, 1, tl::DataType("float"),
+                                     tl::Device::CudaDevice(0));
   auto o = tl::native_ops::Acos(t);
 
   auto t_cpu = t.Transfer(tl::Device::DefaultDevice());
@@ -97,7 +107,8 @@ TEST(TestCudaTensor, TestCudaTensorAcos) {
 }
 
 TEST(TestCudaTensor, TestCudaTensorAcosh) {
-  tl::Tensor t = tl::Tensor::Uniform({12}, 1, 3, tl::DataType("float"), tl::Device::CudaDevice(0));
+  tl::Tensor t = tl::Tensor::Uniform({12}, 1, 3, tl::DataType("float"),
+                                     tl::Device::CudaDevice(0));
   auto o = tl::native_ops::Acosh(t);
 
   auto t_cpu = t.Transfer(tl::Device::DefaultDevice());
@@ -112,7 +123,8 @@ TEST(TestCudaTensor, TestCudaTensorAcosh) {
 }
 
 TEST(TestCudaTensor, TestCudaTensorAbs) {
-  tl::Tensor t = tl::Tensor::Normal({12}, 0, 1, tl::DataType("float"), tl::Device::CudaDevice(0));
+  tl::Tensor t = tl::Tensor::Normal({12}, 0, 1, tl::DataType("float"),
+                                    tl::Device::CudaDevice(0));
   auto o = tl::native_ops::Abs(t);
 
   auto t_cpu = t.Transfer(tl::Device::DefaultDevice());

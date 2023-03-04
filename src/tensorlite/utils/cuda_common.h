@@ -1,6 +1,7 @@
 #ifndef TENSORLOTE_UTILS_CUDA_COMMON_H_
 #define TENSORLOTE_UTILS_CUDA_COMMON_H_
 
+#if ENABLE_CUDA
 #include "tensorlite/utils/logging.h"
 #include "tensorlite/utils/random.h"
 #include "tensorlite/utils/singleton.h"
@@ -89,4 +90,5 @@ struct CUDAThreadLocalHandles {
 
 } // namespace tl
 
+#endif // ENABLE_CUDA
 #endif // TENSORLOTE_UTILS_CUDA_COMMON_H_

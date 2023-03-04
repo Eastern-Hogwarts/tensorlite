@@ -3,13 +3,13 @@
 #include "tensorlite/device/data_transfer.h"
 #include "tensorlite/device/utils.h"
 #include "tensorlite/tensor.h"
-#include "tensorlite/tensor_ops.h"
 #include "tensorlite/tensor_op/cpu_internal_op.h"
+#include "tensorlite/tensor_ops.h"
 
-#if 1 // TODO: change to ENABLE_CUDA
+#if ENABLE_CUDA
 #include "tensorlite/allocator/cuda_allocator.h"
 #include "tensorlite/tensor_op/cuda_internal_op.cuh"
-#endif
+#endif // ENABLE_CUDA
 
 namespace tl {
 
@@ -60,9 +60,11 @@ template <typename T> Tensor FillImpl(Tensor &t, T val) {
   case DeviceType::kCPU:
     cpu::CpuFillKernel(t, val);
     break;
+#if ENABLE_CUDA
   case DeviceType::kCUDA:
     cuda::CudaFillKernel(t, val);
     break;
+#endif // ENABLE_CUDA
   default:
     LOG_ERROR << "unknown device type\n";
     break;
@@ -126,9 +128,11 @@ template <typename T> void TensorElemCopyImpl(const Tensor &src, Tensor &dst) {
   case DeviceType::kCPU:
     cpu::CpuCopyKernel<T>(src, dst);
     break;
+#if ENABLE_CUDA
   case DeviceType::kCUDA:
     cuda::CudaCopyKernel<T>(src, dst);
     break;
+#endif // ENABLE_CUDA
   default:
     LOG_ERROR << "unknown device type\n";
     break;
@@ -204,9 +208,11 @@ Tensor Tensor::Cast(DataType dtype) const {
   case DeviceType::kCPU:
     cpu::CpuCastKernel(*this, cast_tensor);
     break;
+#if ENABLE_CUDA
   case DeviceType::kCUDA:
     cuda::CudaCastKernel(*this, cast_tensor);
     break;
+#endif // ENABLE_CUDA
   default:
     LOG_ERROR << "unknown device type!\n";
     break;
@@ -230,9 +236,11 @@ Tensor Tensor::Uniform(TensorShape shape, Scalar low, Scalar high,
   case DeviceType::kCPU:
     cpu::CpuUniformDistKernel(new_tensor, low, high);
     break;
+#if ENABLE_CUDA
   case DeviceType::kCUDA:
     cuda::CudaUniformDistKernel(new_tensor, low, high);
     break;
+#endif // ENABLE_CUDA
   default:
     LOG_ERROR << "unknown device type!\n";
     break;
@@ -248,9 +256,11 @@ Tensor Tensor::Normal(TensorShape shape, Scalar mean, Scalar stddev,
   case DeviceType::kCPU:
     cpu::CpuNormalDistKernel(new_tensor, mean, stddev);
     break;
+#if ENABLE_CUDA
   case DeviceType::kCUDA:
     cuda::CudaNormalDistKernel(new_tensor, mean, stddev);
     break;
+#endif // ENABLE_CUDA
   default:
     LOG_ERROR << "unknown device type!\n";
     break;
@@ -317,20 +327,18 @@ void Tensor::Display(std::ostream &sm) const {
                [&]() { TensorDisplay<scalar_t>(sm, tensor_to_display); });
 }
 
-Tensor Tensor::operator+(const Tensor& other) const {
+Tensor Tensor::operator+(const Tensor &other) const {
   return native_ops::Add(*this, other);
 }
-Tensor Tensor::operator-(const Tensor& other) const {
+Tensor Tensor::operator-(const Tensor &other) const {
   return native_ops::Sub(*this, other);
 }
-Tensor Tensor::operator*(const Tensor& other) const {
+Tensor Tensor::operator*(const Tensor &other) const {
   return native_ops::Mul(*this, other);
 }
-Tensor Tensor::operator/(const Tensor& other) const {
+Tensor Tensor::operator/(const Tensor &other) const {
   return native_ops::Div(*this, other);
 }
-Tensor Tensor::operator-() const {
-  return native_ops::Neg(*this);
-}
+Tensor Tensor::operator-() const { return native_ops::Neg(*this); }
 
 } // namespace tl

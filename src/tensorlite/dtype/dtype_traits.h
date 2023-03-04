@@ -1,5 +1,4 @@
 #include <cstdint>
-#include <cuda_fp16.h>
 
 #include "tensorlite/dtype.h"
 #include "tensorlite/float16.h"
@@ -40,7 +39,7 @@ template <> struct DataTypeToCRT<DataTypeTag::kUInt64> {
 
 template <> struct DataTypeToCRT<DataTypeTag::kFloat16> {
   using CpuType = fp16_t;
-  using CudaType = __half;
+  using CudaType = fp16_t;
 };
 
 template <> struct DataTypeToCRT<DataTypeTag::kFloat32> {

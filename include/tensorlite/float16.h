@@ -7,9 +7,9 @@
 
 #include <cstdint>
 
-#if defined(__CUDACC__)
+#ifdef __CUDACC__
 #include <cuda_fp16.h>
-#endif
+#endif // __CUDACC__
 
 #include "tensorlite/macros.h"
 
@@ -24,10 +24,10 @@ struct alignas(2) Float16 {
   // useless: to avoid more than one ctor ...
   constexpr explicit Float16(uint16_t bits, int useless) : bits(bits) {}
 
-#if defined(__CUDACC__)
+#ifdef __CUDACC__
   inline TENSOR_HOST_DEVICE Float16(const __half &nv_half);
   inline TENSOR_HOST_DEVICE operator __half() const;
-#endif
+#endif // __CUDACC__
 
   inline TENSOR_HOST_DEVICE operator float() const;
 

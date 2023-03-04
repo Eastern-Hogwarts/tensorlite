@@ -8,6 +8,8 @@
 
 namespace tl {
 
+#if ENABLE_CUDA
+
 /**
  * \brief
  *
@@ -52,6 +54,8 @@ void CudaBufferDeleter(Buffer *buffer);
  * alignment.
  */
 std::shared_ptr<Buffer> NewCudaBuffer(int device_id, size_t size, size_t align);
+
+#endif // ENABLE_CUDA
 
 } // namespace tl
 

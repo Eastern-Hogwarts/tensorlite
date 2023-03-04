@@ -6,6 +6,7 @@
  *       source files include this header may not be compiled by nvcc
  */
 
+#if ENABLE_CUDA
 #include "tensorlite/device.h"
 #include "tensorlite/dtype.h"
 #include "tensorlite/macros.h"
@@ -74,3 +75,4 @@ void CudaNormalDistKernel(Tensor &tensor, Scalar mean, Scalar stddev);
 
 } // namespace cuda
 } // namespace tl
+#endif // ENABLE_CUDA

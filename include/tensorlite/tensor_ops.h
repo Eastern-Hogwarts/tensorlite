@@ -7,7 +7,6 @@
 namespace tl {
 namespace native_ops {
 
-
 /// binary ops
 /**
  * \brief Perform elementwise addition
@@ -24,7 +23,6 @@ TENSORLITE_DLL Tensor Mul(const Tensor &t1, const Tensor &t2);
 
 TENSORLITE_DLL Tensor Div(const Tensor &t1, const Tensor &t2);
 
-
 /// unary ops
 
 TENSORLITE_DLL Tensor Sqrt(const Tensor &t);
@@ -36,6 +34,8 @@ TENSORLITE_DLL Tensor Abs(const Tensor &t);
 TENSORLITE_DLL Tensor Acos(const Tensor &t);
 
 TENSORLITE_DLL Tensor Acosh(const Tensor &t);
+
+TENSORLITE_DLL Tensor Asin(const Tensor &t);
 
 } // namespace native_ops
 } // namespace tl

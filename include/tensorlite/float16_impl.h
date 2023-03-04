@@ -8,7 +8,7 @@
 
 namespace tl {
 
-#if defined(__CUDACC__)
+#ifdef __CUDACC__
 inline TENSOR_HOST_DEVICE Float16::Float16(float f) {
   __half tmp = __float2half(f);
   this->bits = *reinterpret_cast<uint16_t *>(&tmp);
@@ -29,7 +29,7 @@ inline TENSOR_HOST_DEVICE Float16::Float16(float f)
 inline TENSOR_HOST_DEVICE Float16::operator float() const {
   return fp16_ieee_to_fp32_value(bits);
 }
-#endif
+#endif // __CUDACC__
 
 inline TENSOR_HOST_DEVICE Float16 operator+(const Float16 &a,
                                             const Float16 &b) {
@@ -218,6 +218,10 @@ inline TENSOR_HOST_DEVICE fp16_t acos(fp16_t b) {
 
 inline TENSOR_HOST_DEVICE fp16_t acosh(fp16_t b) {
   return ::acoshf(static_cast<float>(b));
+}
+
+inline TENSOR_HOST_DEVICE fp16_t asin(fp16_t b) {
+  return ::asinf(static_cast<float>(b));
 }
 
 } // namespace tl

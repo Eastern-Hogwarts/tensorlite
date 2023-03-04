@@ -19,7 +19,29 @@
 
 #define RESTRICT __restrict__
 
-#if defined(__CUDACC__)
+/**
+ *  NOTE: USE THESE MACROS IN HOST-ONLY CODES
+ *
+ *  We use these macros in host codes to eliminate
+ *  cuda path dispatch, but these dispatch codes themselves
+ *  are valid for host compilers. Since nvcc cannot touch
+ *  these codes, we cannot use __CUDACC__ macro here. Usually
+ *  these codes are in .cc files.
+ */
+#if ENABLE_CUDA
+#define CUDA_MACRO_OPT(x) x
+#else
+#define CUDA_MACRO_OPT(x)
+#endif // ENABLE_CUDA
+
+/**
+ *  NOTE: USE THESE MACROS IN HOST&DEVICE CODES
+ *
+ *  Codes annotated by these macros are invalid for host compilers
+ *  and only nvcc should touch them. Usually these codes are in header
+ *  included by both .cc and .cu files.
+ */
+#ifdef __CUDACC__
 #define TENSOR_KERNEL __global__
 #define TENSOR_HOST __host__
 #define TENSOR_DEVICE __device__
@@ -31,9 +53,9 @@
 #define TENSOR_DEVICE
 #define TENSOR_HOST_DEVICE
 #define CUDA_LAMBDA
-#endif
+#endif // __CUDACC__
 
-#if defined(__clang__)
+#ifdef __clang__
 #define __ubsan_ignore_float_divide_by_zero__                                  \
   __attribute__((no_sanitize("float-divide-by-zero")))
 #define __ubsan_ignore_undefined__ __attribute__((no_sanitize("undefined")))

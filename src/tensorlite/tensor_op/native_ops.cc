@@ -36,24 +36,27 @@ Tensor Sqrt(const Tensor &t) {
 
 OP_DEF(Native_Neg);
 Tensor Neg(const Tensor &t) {
-  return DeviceDispatchCall<Tensor, Tensor>("Native_Neg", t.GetDevice().GetType(), t);
+  return DeviceDispatchCall<Tensor, Tensor>("Native_Neg",
+                                            t.GetDevice().GetType(), t);
 }
 
 OP_DEF(Native_Abs);
 Tensor Abs(const Tensor &t) {
-  return DeviceDispatchCall<Tensor, Tensor>("Native_Abs", t.GetDevice().GetType(), t);
+  return DeviceDispatchCall<Tensor, Tensor>("Native_Abs",
+                                            t.GetDevice().GetType(), t);
 }
 
 OP_DEF(Native_Acos);
 Tensor Acos(const Tensor &t) {
-  return DeviceDispatchCall<Tensor, Tensor>("Native_Acos", t.GetDevice().GetType(), t);
+  return DeviceDispatchCall<Tensor, Tensor>("Native_Acos",
+                                            t.GetDevice().GetType(), t);
 }
 
 OP_DEF(Native_Acosh);
 Tensor Acosh(const Tensor &t) {
-  return DeviceDispatchCall<Tensor, Tensor>("Native_Acosh", t.GetDevice().GetType(), t);
+  return DeviceDispatchCall<Tensor, Tensor>("Native_Acosh",
+                                            t.GetDevice().GetType(), t);
 }
-
 
 } // namespace native_ops
 } // namespace tl

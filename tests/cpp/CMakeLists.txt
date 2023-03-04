@@ -1,7 +1,12 @@
 file(GLOB CPP_TEST_SOURCE_LIST "${CMAKE_SOURCE_DIR}/tests/cpp/*.cc")
 
+if(ENABLE_CUDA)
+  file(GLOB CUDA_TEST_SOURCE_LIST "${CMAKE_SOURCE_DIR}/tests/cpp/cuda/*.cc")
+  list(APPEND CPP_TEST_SOURCE_LIST "${CUDA_TEST_SOURCE_LIST}")
+endif(ENABLE_CUDA)
+
 foreach(test_src ${CPP_TEST_SOURCE_LIST})
-  string(REGEX REPLACE "${CMAKE_SOURCE_DIR}/tests/cpp/(.*)\.cc" "\\1" testname ${test_src})
+  string(REGEX REPLACE "${CMAKE_SOURCE_DIR}/tests/cpp.*/(.*)\.cc" "\\1" testname ${test_src})
   message(STATUS "[UnitTest]: Add testcase \"${testname}\"")
   add_executable(${testname} "${test_src}")
   add_dependencies(${testname} tensorlite)

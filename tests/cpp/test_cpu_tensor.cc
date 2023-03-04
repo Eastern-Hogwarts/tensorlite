@@ -118,6 +118,7 @@ TEST(TestCpuTensor, TestCpuTensorTransfer) {
     EXPECT_EQ(t1_ptr[i], t2_ptr[i]);
   }
 
+#if ENABLE_CUDA
   // to cuda
   auto t3 = t1.Transfer(tl::Device::CudaDevice(0));
   EXPECT_EQ(t3.GetDevice().Name(), "cuda_0");
@@ -129,6 +130,7 @@ TEST(TestCpuTensor, TestCpuTensorTransfer) {
   for (auto i = 0; i < t1.GetNumElems(); ++i) {
     EXPECT_EQ(t1_ptr[i], t4_ptr[i]);
   }
+#endif // ENABLE_CUDA
 }
 
 TEST(TestCpuTensor, TestCpuTensorCast) {
@@ -144,4 +146,3 @@ TEST(TestCpuTensor, TestCpuTensorCast) {
     EXPECT_EQ(t1_ptr[i], static_cast<double>(t2_ptr[i]));
   }
 }
-

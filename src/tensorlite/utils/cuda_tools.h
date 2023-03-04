@@ -1,6 +1,8 @@
 #ifndef TENSORLITE_UTILS_CUDA_TOOLS_H_
 #define TENSORLITE_UTILS_CUDA_TOOLS_H_
 
+#ifdef __CUDACC__
+
 #include "tensorlite/device.h"
 #include "tensorlite/dtype.h"
 #include "tensorlite/macros.h"
@@ -443,4 +445,5 @@ template <> struct dtype_cast<fp16_t, fp16_t, DeviceType::kCUDA> {
 
 } // namespace tl
 
+#endif // __CUDACC__
 #endif // TENSORLITE_UTILS_CUDA_TOOLS_H_
