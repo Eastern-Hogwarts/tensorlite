@@ -29,6 +29,8 @@ public:
   explicit PyTensorShape(const py::list& shape_list)
     : PyTensorShape(static_cast<py::tuple>(shape_list)) {}
 
+  explicit PyTensorShape(const std::vector<tl::shape_elem_t>& shape) : contents_(shape) {}
+
   size_t Rank() const { return contents_.size(); }
 
   tl::shape_elem_t operator[](int idx) const {

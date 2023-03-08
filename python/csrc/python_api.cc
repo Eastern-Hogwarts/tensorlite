@@ -2,8 +2,10 @@
 #include "tensorlite/tensor.h"
 #include <string>
 #include <vector>
+#include <sstream>
 
 #include "shape.h"
+#include "tensor_creation.h"
 
 namespace py = pybind11;
 
@@ -116,6 +118,26 @@ PYBIND11_MODULE(pytensorlite, m) {
     /// Tensor
     ///
     py::class_<tl::Tensor> tensor_class(m, "Tensor");
+    tensor_class.def_static("empty", &tl::pyapi::empty, py::kw_only(), py::arg("dtype") = tl::DataType("double"), py::arg("device") = tl::Device::DefaultDevice())
+    .def_static("ones", &tl::pyapi::ones, py::kw_only(), py::arg("dtype") = tl::DataType("double"), py::arg("device") = tl::Device::DefaultDevice())
+    .def_static("zeros", &tl::pyapi::zeros, py::kw_only(), py::arg("dtype") = tl::DataType("double"), py::arg("device") = tl::Device::DefaultDevice())
+    .def_property_readonly("dtype", &tl::Tensor::GetDataType)
+    .def_property_readonly("device", &tl::Tensor::GetDevice)
+    .def_property_readonly("shape", [](const tl::Tensor& tensor) { return tl::pyapi::PyTensorShape(tensor.GetShape().ToVector()); })
+    .def("__repr__", [](const tl::Tensor& tensor) {
+      std::ostringstream sm;
+      sm << tensor;
+      return sm.str();
+    })
+    .def("__str__", [](const tl::Tensor& tensor) {
+      std::ostringstream sm;
+      tensor.Display(sm);
+      return sm.str();
+    });
+
+    m.def("empty", &tl::pyapi::empty, py::kw_only(), py::arg("dtype") = tl::DataType("double"), py::arg("device") = tl::Device::DefaultDevice());
+    m.def("ones", &tl::pyapi::ones, py::kw_only(), py::arg("dtype") = tl::DataType("double"), py::arg("device") = tl::Device::DefaultDevice());
+    m.def("zeros", &tl::pyapi::zeros, py::kw_only(), py::arg("dtype") = tl::DataType("double"), py::arg("device") = tl::Device::DefaultDevice());
 
 #ifdef VERSION_INFO
   m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);

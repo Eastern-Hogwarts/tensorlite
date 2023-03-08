@@ -791,7 +791,7 @@ public:
    * \return std::ostream&
    */
   friend std::ostream &operator<<(std::ostream &sm, const Tensor &tensor) {
-    sm << "Tensor[shape:" << tensor.GetShape()
+    sm << "Tensor[shape: " << tensor.GetShape()
        << ", dtype: " << tensor.GetDataType()
        << ", device: " << tensor.GetDevice() << "]";
     return sm;
