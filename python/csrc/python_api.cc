@@ -1,11 +1,14 @@
 #include "pybind11/pybind11.h"
 #include "tensorlite/tensor.h"
 #include <string>
+#include <vector>
+
+#include "shape.h"
+
+namespace py = pybind11;
 
 #define STRINGIFY(x) #x
 #define MACRO_STRINGIFY(x) STRINGIFY(x)
-
-namespace py = pybind11;
 
 PYBIND11_MODULE(pytensorlite, m) {
   m.doc() = R"pbdoc(
@@ -88,6 +91,31 @@ PYBIND11_MODULE(pytensorlite, m) {
     .def_property_readonly("type", &tl::Device::GetType)
     .def("is_empty", &tl::Device::IsEmpty)
     .def("as_current_device", &tl::Device::SetCurrentDevice);
+
+
+    ///
+    /// TensorShape
+    ///
+    py::class_<tl::pyapi::PyTensorShape> shape_class(m, "Shape");
+    shape_class.def(py::init<const py::tuple&>())
+      .def(py::init<const py::list&>())
+      .def("__len__", [](const tl::pyapi::PyTensorShape& shape) { return shape.Rank(); })
+      .def("__getitem__", static_cast<tl::shape_elem_t&(tl::pyapi::PyTensorShape::*)(int)>(&tl::pyapi::PyTensorShape::operator[]))
+      .def("__setitem__", [](tl::pyapi::PyTensorShape& shape, int idx, tl::shape_elem_t newvalue) {
+        shape[idx] = newvalue;
+      })
+      .def("__repr__", [](const tl::pyapi::PyTensorShape& shape) {
+        return "<tensorlite.Shape: " + shape.to_string() + ">";
+      })
+      .def("__iter__", [](tl::pyapi::PyTensorShape& shape) {
+        return py::make_iterator(shape.begin(), shape.end());
+      }, py::keep_alive<0, 1>()); /* Keep this alive while iterator is used */
+
+
+    ///
+    /// Tensor
+    ///
+    py::class_<tl::Tensor> tensor_class(m, "Tensor");
 
 #ifdef VERSION_INFO
   m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);

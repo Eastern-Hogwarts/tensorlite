@@ -126,11 +126,13 @@ endif ()
 if(BUILD_PYTHON_API)
   message(STATUS "Build Python API")
   add_subdirectory("${CMAKE_SOURCE_DIR}/3rdparty/pybind11" EXCLUDE_FROM_ALL)
-  pybind11_add_module(pytensorlite MODULE "${CMAKE_SOURCE_DIR}/python/csrc/python_api.cc")
+  file(GLOB_RECURSE TENSORLITE_PYTHON_API_SRCS "${CMAKE_CURRENT_SOURCE_DIR}/python/csrc/*.cc")
+  pybind11_add_module(pytensorlite MODULE ${TENSORLITE_PYTHON_API_SRCS})
   target_include_directories(pytensorlite
                              PUBLIC
                              "${CMAKE_CURRENT_SOURCE_DIR}/include"
-                             "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/FP16/include")
+                             "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/FP16/include"
+                             "${CMAKE_CURRENT_SOURCE_DIR}/python/csrc")
   target_link_libraries(pytensorlite PRIVATE tensorlite)
   add_dependencies(pytensorlite tensorlite)
   target_compile_definitions(pytensorlite PRIVATE VERSION_INFO=${CMAKE_PROJECT_VERSION})
