@@ -28,7 +28,7 @@
  *  these codes, we cannot use __CUDACC__ macro here. Usually
  *  these codes are in .cc files.
  */
-#if ENABLE_CUDA
+#ifdef ENABLE_CUDA
 #define CUDA_MACRO_OPT(x) x
 #else
 #define CUDA_MACRO_OPT(x)

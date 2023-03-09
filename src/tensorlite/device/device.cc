@@ -1,6 +1,6 @@
 #include "tensorlite/device.h"
 
-#if ENABLE_CUDA
+#ifdef ENABLE_CUDA
 #include "tensorlite/utils/cuda_common.h"
 #include <cuda_runtime.h>
 #endif // ENABLE_CUDA
@@ -9,7 +9,7 @@ namespace tl {
 
 void Device::SetCurrentDevice() const {
   switch (type_) {
-#if ENABLE_CUDA
+#ifdef ENABLE_CUDA
   case DeviceType::kCUDA:
     CUDA_CALL(cudaSetDevice(id_));
     break;

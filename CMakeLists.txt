@@ -49,7 +49,7 @@ if(ENABLE_CUDA)
   endif()
 
   # use shared cudart
-  set(CMAKE_CUDA_RUNTIME_LIBRARY SHARED)
+  set(CMAKE_CUDA_RUNTIME_LIBRARY Shared)
   message(STATUS "Use CUDA Compiler: ${CMAKE_CUDA_COMPILER_ID}:${CMAKE_CUDA_COMPILER_VERSION}")
   message(STATUS "CUDA Compiler Path: ${CMAKE_CUDA_COMPILER}")
 
@@ -127,15 +127,15 @@ if(BUILD_PYTHON_API)
   message(STATUS "Build Python API")
   add_subdirectory("${CMAKE_SOURCE_DIR}/3rdparty/pybind11" EXCLUDE_FROM_ALL)
   file(GLOB_RECURSE TENSORLITE_PYTHON_API_SRCS "${CMAKE_CURRENT_SOURCE_DIR}/python/csrc/*.cc")
-  pybind11_add_module(pytensorlite MODULE ${TENSORLITE_PYTHON_API_SRCS})
-  target_include_directories(pytensorlite
+  pybind11_add_module(pytensorlite_C MODULE ${TENSORLITE_PYTHON_API_SRCS})
+  target_include_directories(pytensorlite_C
                              PUBLIC
                              "${CMAKE_CURRENT_SOURCE_DIR}/include"
                              "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/FP16/include"
                              "${CMAKE_CURRENT_SOURCE_DIR}/python/csrc")
-  target_link_libraries(pytensorlite PRIVATE tensorlite)
-  add_dependencies(pytensorlite tensorlite)
-  target_compile_definitions(pytensorlite PRIVATE VERSION_INFO=${CMAKE_PROJECT_VERSION})
+  target_link_libraries(pytensorlite_C PRIVATE tensorlite)
+  add_dependencies(pytensorlite_C tensorlite)
+  target_compile_definitions(pytensorlite_C PRIVATE VERSION_INFO=${CMAKE_PROJECT_VERSION})
 endif()
 
 if(BUILD_TEST)

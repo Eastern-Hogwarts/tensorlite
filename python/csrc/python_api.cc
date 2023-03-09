@@ -12,7 +12,7 @@ namespace py = pybind11;
 #define STRINGIFY(x) #x
 #define MACRO_STRINGIFY(x) STRINGIFY(x)
 
-PYBIND11_MODULE(pytensorlite, m) {
+PYBIND11_MODULE(pytensorlite_C, m) {
   m.doc() = R"pbdoc(
     Tensorlite: a light-weight tensor library
     -----------------------------------------
@@ -72,7 +72,7 @@ PYBIND11_MODULE(pytensorlite, m) {
   py::class_<tl::Device> device_class(m, "Device");
 
   py::enum_<tl::DeviceType>(device_class, "DeviceType")
-      .value("cpy", tl::DeviceType::kCPU)
+      .value("cpu", tl::DeviceType::kCPU)
       .value("cuda", tl::DeviceType::kCUDA)
       .value("empty", tl::DeviceType::kEmpty)
       .export_values();

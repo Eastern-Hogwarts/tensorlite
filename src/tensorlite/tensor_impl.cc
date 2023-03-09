@@ -6,7 +6,7 @@
 #include "tensorlite/tensor_op/cpu_internal_op.h"
 #include "tensorlite/tensor_ops.h"
 
-#if ENABLE_CUDA
+#ifdef ENABLE_CUDA
 #include "tensorlite/allocator/cuda_allocator.h"
 #include "tensorlite/tensor_op/cuda_internal_op.cuh"
 #endif // ENABLE_CUDA
@@ -60,7 +60,7 @@ template <typename T> Tensor FillImpl(Tensor &t, T val) {
   case DeviceType::kCPU:
     cpu::CpuFillKernel(t, val);
     break;
-#if ENABLE_CUDA
+#ifdef ENABLE_CUDA
   case DeviceType::kCUDA:
     cuda::CudaFillKernel(t, val);
     break;
@@ -128,7 +128,7 @@ template <typename T> void TensorElemCopyImpl(const Tensor &src, Tensor &dst) {
   case DeviceType::kCPU:
     cpu::CpuCopyKernel<T>(src, dst);
     break;
-#if ENABLE_CUDA
+#ifdef ENABLE_CUDA
   case DeviceType::kCUDA:
     cuda::CudaCopyKernel<T>(src, dst);
     break;
@@ -208,7 +208,7 @@ Tensor Tensor::Cast(DataType dtype) const {
   case DeviceType::kCPU:
     cpu::CpuCastKernel(*this, cast_tensor);
     break;
-#if ENABLE_CUDA
+#ifdef ENABLE_CUDA
   case DeviceType::kCUDA:
     cuda::CudaCastKernel(*this, cast_tensor);
     break;
@@ -236,7 +236,7 @@ Tensor Tensor::Uniform(TensorShape shape, Scalar low, Scalar high,
   case DeviceType::kCPU:
     cpu::CpuUniformDistKernel(new_tensor, low, high);
     break;
-#if ENABLE_CUDA
+#ifdef ENABLE_CUDA
   case DeviceType::kCUDA:
     cuda::CudaUniformDistKernel(new_tensor, low, high);
     break;
@@ -256,7 +256,7 @@ Tensor Tensor::Normal(TensorShape shape, Scalar mean, Scalar stddev,
   case DeviceType::kCPU:
     cpu::CpuNormalDistKernel(new_tensor, mean, stddev);
     break;
-#if ENABLE_CUDA
+#ifdef ENABLE_CUDA
   case DeviceType::kCUDA:
     cuda::CudaNormalDistKernel(new_tensor, mean, stddev);
     break;

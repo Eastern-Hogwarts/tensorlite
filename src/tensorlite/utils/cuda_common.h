@@ -1,7 +1,7 @@
 #ifndef TENSORLOTE_UTILS_CUDA_COMMON_H_
 #define TENSORLOTE_UTILS_CUDA_COMMON_H_
 
-#if ENABLE_CUDA
+#ifdef ENABLE_CUDA
 #include "tensorlite/utils/logging.h"
 #include "tensorlite/utils/random.h"
 #include "tensorlite/utils/singleton.h"

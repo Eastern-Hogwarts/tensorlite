@@ -118,7 +118,7 @@ TEST(TestCpuTensor, TestCpuTensorTransfer) {
     EXPECT_EQ(t1_ptr[i], t2_ptr[i]);
   }
 
-#if ENABLE_CUDA
+#ifdef ENABLE_CUDA
   // to cuda
   auto t3 = t1.Transfer(tl::Device::CudaDevice(0));
   EXPECT_EQ(t3.GetDevice().Name(), "cuda_0");

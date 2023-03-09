@@ -6,7 +6,7 @@
  *       source files include this header may not be compiled by nvcc
  */
 
-#if ENABLE_CUDA
+#ifdef ENABLE_CUDA
 #include "tensorlite/device.h"
 #include "tensorlite/dtype.h"
 #include "tensorlite/macros.h"

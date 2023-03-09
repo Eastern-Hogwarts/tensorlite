@@ -8,7 +8,7 @@
 
 namespace tl {
 
-#if ENABLE_CUDA
+#ifdef ENABLE_CUDA
 
 /**
  * \brief

@@ -14,7 +14,7 @@ void DataTransfer<DeviceType::kCPU, DeviceType::kCPU>(
   std::memcpy(dst_ptr, src_ptr, size);
 }
 
-#if ENABLE_CUDA
+#ifdef ENABLE_CUDA
 
 } // namespace tl
 
