@@ -20,4 +20,4 @@ if platform.system() == "Windows":
     if py_major_version >= 3 and py_minor_version >= 8:
         add_sys_path_to_dll_load_path()
 
-from . import pytensorlite_C as _C
+from .pytensorlite_capi import *

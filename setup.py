@@ -4,7 +4,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from setuptools import Extension, setup
+from setuptools import Extension, setup, find_packages
 from setuptools.command.build_ext import build_ext
 
 # Convert distutils Windows platform specifiers to CMake -A arguments
@@ -18,6 +18,21 @@ PLAT_TO_CMAKE = {
 # ROOT/python/setup.py -> ROOT
 PROJECT_ROOT = Path(__file__).parent.resolve()
 PROJECT_BUILD_DIR = (PROJECT_ROOT / Path("build")).resolve()
+PACKAGE_NAME = "pytensorlite"
+
+def process_submodules(submodule_config_path):
+    pattern = r"path\s*=\s*(.+)\n\s*url\s*=\s*(.+)\n"
+    with open(submodule_config_path, 'r') as f:
+        contents = f.read()
+
+    matches = re.findall(pattern, contents)
+    for path, url in matches:
+        if os.path.exists(os.path.join(PROJECT_ROOT, path)):
+            continue
+        else:
+            subprocess.run(
+                f"git clone --depth=1 {url} {path}".split(), check=True
+            )
 
 # A CMakeExtension needs a sourcedir instead of a file list.
 # The name must be the _single_ output extension from the CMake build.
@@ -33,6 +48,7 @@ class CMakeBuild(build_ext):
         # Must be in this form due to bug in .resolve() only fixed in Python 3.10+
         ext_fullpath = PROJECT_ROOT / self.get_ext_fullpath(ext.name)
         extdir = ext_fullpath.parent.resolve()
+        cdlls_output_path = f"{extdir}{os.sep}{PACKAGE_NAME}{os.sep}"
 
         debug = int(os.environ.get("DEBUG", 0)) if self.debug is None else self.debug
         cfg = "Debug" if debug else "Release"
@@ -42,9 +58,9 @@ class CMakeBuild(build_ext):
         cmake_generator = os.environ.get("CMAKE_GENERATOR", "")
 
         cmake_args = [
-            f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={extdir}{os.sep}",
-            f"-DCMAKE_RUNTIME_OUTPUT_DIRECTORY={extdir}{os.sep}",
-            f"-DCMAKE_ARCHIVE_OUTPUT_DIRECTORY={extdir}{os.sep}",
+            f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={cdlls_output_path}",
+            f"-DCMAKE_RUNTIME_OUTPUT_DIRECTORY={cdlls_output_path}",
+            f"-DCMAKE_ARCHIVE_OUTPUT_DIRECTORY={cdlls_output_path}",
             f"-DPYTHON_EXECUTABLE={sys.executable}",
             f"-DCMAKE_BUILD_TYPE={cfg}",
             f"-DBUILD_PYTHON_API=ON",
@@ -91,9 +107,9 @@ class CMakeBuild(build_ext):
             # Multi-config generators have a different way to specify configs
             if not single_config:
                 cmake_args += [
-                    f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{cfg.upper()}={extdir}{os.sep}",
-                    f"-DCMAKE_RUNTIME_OUTPUT_DIRECTORY_{cfg.upper()}={extdir}{os.sep}",
-                    f"-DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_{cfg.upper()}={extdir}{os.sep}",
+                    f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{cfg.upper()}={cdlls_output_path}",
+                    f"-DCMAKE_RUNTIME_OUTPUT_DIRECTORY_{cfg.upper()}={cdlls_output_path}",
+                    f"-DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_{cfg.upper()}={cdlls_output_path}",
                 ]
                 build_args += ["--config", cfg]
 
@@ -110,6 +126,9 @@ class CMakeBuild(build_ext):
         if not build_temp.exists():
             build_temp.mkdir(parents=True)
 
+        # if we are under sdist dir, fetch all submodules manually.
+        process_submodules(os.path.join(PROJECT_ROOT, ".gitmodules"))
+
         subprocess.run(
             ["cmake", f"-S{ext.sourcedir}", f"-B{PROJECT_BUILD_DIR}"] + cmake_args, check=True
         )
@@ -121,15 +140,16 @@ class CMakeBuild(build_ext):
 # The information here can also be placed in setup.cfg - better separation of
 # logic and declaration, and simpler if you include description/version in a file.
 setup(
-    name="pytensorlite",
+    name=PACKAGE_NAME,
     version="0.1",
-    author="Dean Moldovan",
-    author_email="dean0x7d@gmail.com",
-    description="A test project using pybind11 and CMake",
-    long_description="",
-    ext_modules=[CMakeExtension("pytensorlite_C", sourcedir=PROJECT_ROOT)],
+    ext_modules=[CMakeExtension(f"{PACKAGE_NAME}_capi", sourcedir=PROJECT_ROOT)],
     cmdclass={"build_ext": CMakeBuild},
     zip_safe=False,
-    # extras_require={"test": ["pytest>=6.0"]},
     python_requires=">=3.7",
+    package_dir={"": "python"},
+    packages=find_packages(
+        where="python",
+        include=["pytensorlite"],
+    ),
+    include_package_data=True
 )

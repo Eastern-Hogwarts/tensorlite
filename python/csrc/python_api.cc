@@ -12,7 +12,7 @@ namespace py = pybind11;
 #define STRINGIFY(x) #x
 #define MACRO_STRINGIFY(x) STRINGIFY(x)
 
-PYBIND11_MODULE(pytensorlite_C, m) {
+PYBIND11_MODULE(pytensorlite_capi, m) {
   m.doc() = R"pbdoc(
     Tensorlite: a light-weight tensor library
     -----------------------------------------
