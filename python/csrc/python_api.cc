@@ -78,10 +78,11 @@ PYBIND11_MODULE(pytensorlite_capi, m) {
       .export_values();
 
   device_class.def(py::init<int, tl::DeviceType>(), py::arg("id"), py::arg("device_type"))
+    .def(py::init<const std::string&>(), py::arg("device_name"))
     .def_static("cpu_device", &tl::Device::CpuDevice, py::arg("id"))
     .def_static("cuda_device", &tl::Device::CudaDevice, py::arg("id"))
     .def_static("default_device", &tl::Device::DefaultDevice)
-    .def_static("static_device", &tl::Device::EmptyDevice)
+    .def_static("empty_device", &tl::Device::EmptyDevice)
     .def("__repr__", [](const tl::Device &device) {
       return "<tensorlite.Device: " + device.Name() + ">";
     })
@@ -118,10 +119,7 @@ PYBIND11_MODULE(pytensorlite_capi, m) {
     /// Tensor
     ///
     py::class_<tl::Tensor> tensor_class(m, "Tensor");
-    tensor_class.def_static("empty", &tl::pyapi::empty, py::kw_only(), py::arg("dtype") = tl::DataType("double"), py::arg("device") = tl::Device::DefaultDevice())
-    .def_static("ones", &tl::pyapi::ones, py::kw_only(), py::arg("dtype") = tl::DataType("double"), py::arg("device") = tl::Device::DefaultDevice())
-    .def_static("zeros", &tl::pyapi::zeros, py::kw_only(), py::arg("dtype") = tl::DataType("double"), py::arg("device") = tl::Device::DefaultDevice())
-    .def_property_readonly("dtype", &tl::Tensor::GetDataType)
+    tensor_class.def_property_readonly("dtype", &tl::Tensor::GetDataType)
     .def_property_readonly("device", &tl::Tensor::GetDevice)
     .def_property_readonly("shape", [](const tl::Tensor& tensor) { return tl::pyapi::PyTensorShape(tensor.GetShape().ToVector()); })
     .def("__repr__", [](const tl::Tensor& tensor) {
@@ -135,9 +133,98 @@ PYBIND11_MODULE(pytensorlite_capi, m) {
       return sm.str();
     });
 
-    m.def("empty", &tl::pyapi::empty, py::kw_only(), py::arg("dtype") = tl::DataType("double"), py::arg("device") = tl::Device::DefaultDevice());
-    m.def("ones", &tl::pyapi::ones, py::kw_only(), py::arg("dtype") = tl::DataType("double"), py::arg("device") = tl::Device::DefaultDevice());
-    m.def("zeros", &tl::pyapi::zeros, py::kw_only(), py::arg("dtype") = tl::DataType("double"), py::arg("device") = tl::Device::DefaultDevice());
+    m.def("empty", [](const py::args& shape_args, const tl::DataType& dtype, const tl::Device& device) {
+      return tl::pyapi::empty<tl::DataType, tl::Device>(shape_args, dtype, device);
+    }, py::kw_only(), py::arg("dtype") = tl::DataType("double"), py::arg("device") = tl::Device::DefaultDevice());
+    m.def("empty", [](const py::args& shape_args, const std::string& dtype, const tl::Device& device) {
+      return tl::pyapi::empty<std::string, tl::Device>(shape_args, dtype, device);
+    }, py::kw_only(), py::arg("dtype") = "double", py::arg("device") = tl::Device::DefaultDevice());
+    m.def("empty", [](const py::args& shape_args, const tl::DataType& dtype, const std::string& device) {
+      return tl::pyapi::empty<tl::DataType, std::string>(shape_args, dtype, device);
+    }, py::kw_only(), py::arg("dtype") = tl::DataType("double"), py::arg("device") = tl::Device::DefaultDevice().Name());
+    m.def("empty", [](const py::args& shape_args, const std::string& dtype, const std::string& device) {
+      return tl::pyapi::empty<std::string, std::string>(shape_args, dtype, device);
+    }, py::kw_only(), py::arg("dtype") = "double", py::arg("device") = tl::Device::DefaultDevice().Name());
+
+    m.def("ones", [](const py::args& shape_args, const tl::DataType& dtype, const tl::Device& device) {
+      return tl::pyapi::ones<tl::DataType, tl::Device>(shape_args, dtype, device);
+    }, py::kw_only(), py::arg("dtype") = tl::DataType("double"), py::arg("device") = tl::Device::DefaultDevice());
+    m.def("ones", [](const py::args& shape_args, const std::string& dtype, const tl::Device& device) {
+      return tl::pyapi::ones<std::string, tl::Device>(shape_args, dtype, device);
+    }, py::kw_only(), py::arg("dtype") = "double", py::arg("device") = tl::Device::DefaultDevice());
+    m.def("ones", [](const py::args& shape_args, const tl::DataType& dtype, const std::string& device) {
+      return tl::pyapi::ones<tl::DataType, std::string>(shape_args, dtype, device);
+    }, py::kw_only(), py::arg("dtype") = tl::DataType("double"), py::arg("device") = tl::Device::DefaultDevice().Name());
+    m.def("ones", [](const py::args& shape_args, const std::string& dtype, const std::string& device) {
+      return tl::pyapi::ones<std::string, std::string>(shape_args, dtype, device);
+    }, py::kw_only(), py::arg("dtype") = "double", py::arg("device") = tl::Device::DefaultDevice().Name());
+
+    m.def("zeros", [](const py::args& shape_args, const tl::DataType& dtype, const tl::Device& device) {
+      return tl::pyapi::zeros<tl::DataType, tl::Device>(shape_args, dtype, device);
+    }, py::kw_only(), py::arg("dtype") = tl::DataType("double"), py::arg("device") = tl::Device::DefaultDevice());
+    m.def("zeros", [](const py::args& shape_args, const std::string& dtype, const tl::Device& device) {
+      return tl::pyapi::zeros<std::string, tl::Device>(shape_args, dtype, device);
+    }, py::kw_only(), py::arg("dtype") = "double", py::arg("device") = tl::Device::DefaultDevice());
+    m.def("zeros", [](const py::args& shape_args, const tl::DataType& dtype, const std::string& device) {
+      return tl::pyapi::zeros<tl::DataType, std::string>(shape_args, dtype, device);
+    }, py::kw_only(), py::arg("dtype") = tl::DataType("double"), py::arg("device") = tl::Device::DefaultDevice().Name());
+    m.def("zeros", [](const py::args& shape_args, const std::string& dtype, const std::string& device) {
+      return tl::pyapi::zeros<std::string, std::string>(shape_args, dtype, device);
+    }, py::kw_only(), py::arg("dtype") = "double", py::arg("device") = tl::Device::DefaultDevice().Name());
+
+    m.def("uniform", [](const py::args& shape_args, double low, double high, const tl::DataType& dtype, const tl::Device& device) {
+      return tl::pyapi::uniform<tl::DataType, tl::Device>(shape_args, low, high, dtype, device);
+    }, py::kw_only(), py::arg("low") = 0., py::arg("high") = 1., py::arg("dtype") = tl::DataType("double"), py::arg("device") = tl::Device::DefaultDevice());
+    m.def("uniform", [](const py::args& shape_args, double low, double high, const std::string& dtype, const tl::Device& device) {
+      return tl::pyapi::uniform<std::string, tl::Device>(shape_args, low, high, dtype, device);
+    }, py::kw_only(), py::arg("low") = 0., py::arg("high") = 1., py::arg("dtype") = "double", py::arg("device") = tl::Device::DefaultDevice());
+    m.def("uniform", [](const py::args& shape_args, double low, double high, const tl::DataType& dtype, const std::string& device) {
+      return tl::pyapi::uniform<tl::DataType, std::string>(shape_args, low, high, dtype, device);
+    }, py::kw_only(), py::arg("low") = 0., py::arg("high") = 1., py::arg("dtype") = tl::DataType("double"), py::arg("device") = tl::Device::DefaultDevice().Name());
+    m.def("uniform", [](const py::args& shape_args, double low, double high, const std::string& dtype, const std::string& device) {
+      return tl::pyapi::uniform<std::string, std::string>(shape_args, low, high, dtype, device);
+    }, py::kw_only(), py::arg("low") = 0., py::arg("high") = 1., py::arg("dtype") = "double", py::arg("device") = tl::Device::DefaultDevice().Name());
+
+    m.def("normal", [](const py::args& shape_args, double mean, double stddev, const tl::DataType& dtype, const tl::Device& device) {
+      return tl::pyapi::normal<tl::DataType, tl::Device>(shape_args, mean, stddev, dtype, device);
+    }, py::kw_only(), py::arg("mean") = 0., py::arg("stddev") = 1., py::arg("dtype") = tl::DataType("double"), py::arg("device") = tl::Device::DefaultDevice());
+    m.def("normal", [](const py::args& shape_args, double mean, double stddev, const std::string& dtype, const tl::Device& device) {
+      return tl::pyapi::normal<std::string, tl::Device>(shape_args, mean, stddev, dtype, device);
+    }, py::kw_only(), py::arg("mean") = 0., py::arg("stddev") = 1., py::arg("dtype") = "double", py::arg("device") = tl::Device::DefaultDevice());
+    m.def("normal", [](const py::args& shape_args, double mean, double stddev, const tl::DataType& dtype, const std::string& device) {
+      return tl::pyapi::normal<tl::DataType, std::string>(shape_args, mean, stddev, dtype, device);
+    }, py::kw_only(), py::arg("mean") = 0., py::arg("stddev") = 1., py::arg("dtype") = tl::DataType("double"), py::arg("device") = tl::Device::DefaultDevice().Name());
+    m.def("normal", [](const py::args& shape_args, double mean, double stddev, const std::string& dtype, const std::string& device) {
+      return tl::pyapi::normal<std::string, std::string>(shape_args, mean, stddev, dtype, device);
+    }, py::kw_only(), py::arg("mean") = 0., py::arg("stddev") = 1., py::arg("dtype") = "double", py::arg("device") = tl::Device::DefaultDevice().Name());
+
+
+    m.def("same_as", [](const tl::Tensor& other, const tl::DataType* dtype, const tl::Device* device) {
+      return tl::pyapi::same_as<tl::DataType, tl::Device>(other, dtype, device);
+    }, py::arg("other"), py::arg("dtype").none(true) = nullptr, py::arg("device").none(true) = nullptr);
+    m.def("same_as", [](const tl::Tensor& other, const std::string* dtype, const tl::Device* device) {
+      return tl::pyapi::same_as<std::string, tl::Device>(other, dtype, device);
+    }, py::arg("other"), py::arg("dtype").none(true) = nullptr, py::arg("device").none(true) = nullptr);
+    m.def("same_as", [](const tl::Tensor& other, const tl::DataType* dtype, const std::string* device) {
+      return tl::pyapi::same_as<tl::DataType, std::string>(other, dtype, device);
+    }, py::arg("other"), py::arg("dtype").none(true) = nullptr, py::arg("device").none(true) = nullptr);
+    m.def("same_as", [](const tl::Tensor& other, const std::string* dtype, const std::string* device) {
+      return tl::pyapi::same_as<std::string, std::string>(other, dtype, device);
+    }, py::arg("other"), py::arg("dtype").none(true) = nullptr, py::arg("device").none(true) = nullptr);
+
+    m.def("full", [](const py::args& shape_args, double val, const tl::DataType& dtype, const tl::Device& device) {
+      return tl::pyapi::full<tl::DataType, tl::Device>(shape_args, val, dtype, device);
+    }, py::kw_only(), py::arg("val") = 0, py::arg("dtype") = tl::DataType("double"), py::arg("device") = tl::Device::DefaultDevice());
+    m.def("full", [](const py::args& shape_args, double val, const std::string& dtype, const tl::Device& device) {
+      return tl::pyapi::full<std::string, tl::Device>(shape_args, val, dtype, device);
+    }, py::kw_only(), py::arg("val") = 0, py::arg("dtype") = "double", py::arg("device") = tl::Device::DefaultDevice());
+    m.def("full", [](const py::args& shape_args, double val, const tl::DataType& dtype, const std::string& device) {
+      return tl::pyapi::full<tl::DataType, std::string>(shape_args, val, dtype, device);
+    }, py::kw_only(), py::arg("val") = 0, py::arg("dtype") = tl::DataType("double"), py::arg("device") = tl::Device::DefaultDevice().Name());
+    m.def("full", [](const py::args& shape_args, double val, const std::string& dtype, const std::string& device) {
+      return tl::pyapi::full<std::string, std::string>(shape_args, val, dtype, device);
+    }, py::kw_only(), py::arg("val") = 0, py::arg("dtype") = "double", py::arg("device") = tl::Device::DefaultDevice().Name());
+
 
 #ifdef VERSION_INFO
   m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);

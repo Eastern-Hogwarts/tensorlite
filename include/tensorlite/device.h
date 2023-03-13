@@ -5,14 +5,18 @@
 #include <string>
 #include <string_view>
 #include <utility>
+#include <algorithm>
+#include <unordered_map>
+#include <stdexcept>
+#include <iostream>
 
 #include "tensorlite/macros.h"
 
 namespace tl {
 
-enum class DeviceType { kCPU, kCUDA, kEmpty };
+enum class DeviceType : int { kCPU, kCUDA, kEmpty };
 
-inline constexpr std::string_view DeviceTypeName(DeviceType type) {
+inline constexpr std::string_view DeviceTypeName(DeviceType type) noexcept {
   switch (type) {
   case DeviceType::kCPU:
     return "cpu";
@@ -24,6 +28,8 @@ inline constexpr std::string_view DeviceTypeName(DeviceType type) {
     return "unknown";
   }
 }
+
+TENSORLITE_DLL DeviceType DeviceTypeFromName(const std::string& name);
 
 /**
  * \brief Device class
@@ -45,6 +51,16 @@ public:
    * \param type device type
    */
   explicit Device(int id, DeviceType type) : id_(id), type_(type) {}
+
+  explicit Device(const std::string& device_name) {
+    auto sep_pos = device_name.find_last_of('_');
+    if (sep_pos == device_name.npos || sep_pos + 1 >= device_name.size()) {
+      id_ = 0; type_ = DeviceTypeFromName(device_name.substr(0, sep_pos));
+    } else {
+      id_ = std::stoi(device_name.substr(sep_pos + 1));
+      type_ = DeviceTypeFromName(device_name.substr(0, sep_pos));
+    }
+  }
 
   Device(const Device &other) : id_(other.id_), type_(other.type_) {}
 
